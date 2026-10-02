@@ -4,9 +4,8 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 10 — production build and deployment configuration are ready; the site is
-> not deployed yet (see [Deployment](#deployment)). Phases 8 and 9 are deferred. See
-> [Roadmap](#roadmap).
+> **Status:** Phase 10 — the API is live on Render; the frontend deploy to Vercel is next (see
+> [Deployment](#deployment)). Phases 8 and 9 are deferred. See [Roadmap](#roadmap).
 
 ## Tech stack
 
@@ -77,10 +76,8 @@ cp server/.env.example server/.env
 
 On Windows PowerShell use `Copy-Item client/.env.example client/.env` (and the same for server).
 
-3. Optional: place the resume at `client/public/resume.pdf` and set `VITE_RESUME_URL=/resume.pdf`
-   in `client/.env` to show the resume buttons locally. The file is **git-ignored and
-   local-only** until a sanitized version (no phone number, no confidential details) is
-   approved — see [Enabling the public resume](#enabling-the-public-resume).
+3. Optional: set `VITE_RESUME_URL=/resume.pdf` in `client/.env` to show the resume buttons
+   locally — see [Public resume](#public-resume).
 
 ## Environment variables
 
@@ -305,13 +302,13 @@ The build also:
 - writes `robots.txt` and `sitemap.xml` (`/`, `/portfolio`, `/workspace`) for `VITE_SITE_URL`;
 - fills the canonical link, Open Graph/Twitter tags (`og-image.png`, 1200×630) and the JSON-LD
   `Person` record in `index.html` from `VITE_SITE_URL` — public email and location only;
-- deletes `dist/resume.pdf` unless `VITE_RESUME_URL` is set (a local, unsanitized copy can never
-  be deployed by accident);
+- deletes `dist/resume.pdf` unless `VITE_RESUME_URL` is set, so the resume is only published
+  when explicitly enabled;
 - emits fonts as separate files (never inlined), as the CSP only allows fonts from `'self'`.
 
 **Security headers** (`client/vercel.json`, applied by Vercel): a strict Content-Security-Policy
-(scripts, styles, fonts and images from the site itself; API calls to the site and
-`*.onrender.com`; no framing), `nosniff`, `strict-origin-when-cross-origin` referrer,
+(scripts, styles, fonts and images from the site itself; API calls only to the site and
+`https://satwik-portfolio-api.onrender.com`; no framing), `nosniff`, `strict-origin-when-cross-origin` referrer,
 `Permissions-Policy` denying camera/microphone/geolocation/payment, and
 `Cross-Origin-Opener-Policy`. Hashed files in `/assets/` are cached for a year; every route
 falls back to `index.html` for client-side routing.
@@ -341,7 +338,7 @@ deployed from a local machine. Both free tiers are enough for this site.
 
 ### 2. API on Render
 
-1. Push the repository to GitHub (`.env` files and `resume.pdf` are git-ignored).
+1. Push the repository to GitHub (`.env` files are git-ignored).
 2. Render → **New → Blueprint** → select the repository. `render.yaml` creates the
    `satwik-portfolio-api` web service (root `server/`, `npm ci --omit=dev`, `npm start`,
    health check `/api/health`, Node 24, `MONGODB_DB_NAME=portfolio-prod`).
@@ -349,7 +346,7 @@ deployed from a local machine. Both free tiers are enough for this site.
    - `MONGODB_URI` — the Atlas connection string with the rotated password.
    - `CLIENT_URL` — the Vercel URL you will use, e.g. `https://satwik-mukherjee.vercel.app`
      (comma-separate several; no trailing slash).
-4. After the deploy, open `https://<service>.onrender.com/api/health` — expect
+4. After the deploy, open [`https://satwik-portfolio-api.onrender.com/api/health`](https://satwik-portfolio-api.onrender.com/api/health) — expect
    `"environment": "production"` and `"database": "connected"`.
 
 ### 3. Frontend on Vercel
@@ -361,19 +358,19 @@ deployed from a local machine. Both free tiers are enough for this site.
 
    | Variable          | Value                                                    |
    | ----------------- | -------------------------------------------------------- |
-   | `VITE_API_URL`    | `https://<service>.onrender.com`                         |
+   | `VITE_API_URL`    | `https://satwik-portfolio-api.onrender.com`              |
    | `VITE_SITE_URL`   | `https://<project>.vercel.app` (must match `CLIENT_URL`) |
-   | `VITE_RESUME_URL` | leave unset until a sanitized resume is committed        |
+   | `VITE_RESUME_URL` | `/resume.pdf`                                            |
 
 4. Deploy, then confirm the project's production URL matches `CLIENT_URL` on Render and
    `VITE_SITE_URL` on Vercel. If you change either, update the other side and redeploy
    (`VITE_*` values are baked in at build time).
 
-### 4. Tighten and verify
+### 4. Verify
 
-- Replace `https://*.onrender.com` in the CSP `connect-src` (`client/vercel.json`) with the
-  exact API origin, e.g. `https://satwik-portfolio-api.onrender.com`, and push.
 - Run through the [pre-launch checklist](#pre-launch-checklist).
+- If the API ever moves, update `VITE_API_URL` on Vercel **and** the CSP `connect-src` in
+  `client/vercel.json` (currently `https://satwik-portfolio-api.onrender.com`) — otherwise the browser blocks every API call.
 
 **Preview deployments** (Vercel branch/PR URLs) are not in `CLIENT_URL`, so their contact form
 and analytics are rejected by the API and content comes from the bundled copy. Test the contact
@@ -387,15 +384,17 @@ form waits up to 30 seconds before showing the email fallback.
 **Contact messages** have no admin UI yet: read them in Atlas → Browse Collections →
 `portfolio-prod.contactmessages`. Nobody is notified of new messages, so check periodically.
 
-### Enabling the public resume
+### Public resume
 
-Only once a sanitized PDF (no phone number, no confidential details) is approved:
+`client/public/resume.pdf` is the approved, sanitized resume (no phone number). With
+`VITE_RESUME_URL=/resume.pdf` the resume buttons appear on the landing page, the portfolio hero,
+the navigation and the workspace terminal; without it they are hidden and the build drops the
+file.
 
-1. Replace `client/public/resume.pdf` with the sanitized version and open it to double-check
-   its text **and metadata** (title, author, subject, keywords).
-2. Remove the `client/public/resume.pdf` line from `.gitignore` and commit the PDF.
-3. Set `VITE_RESUME_URL=/resume.pdf` on Vercel and redeploy. The resume buttons appear on the
-   landing page, the portfolio hero, the navigation and the workspace terminal.
+To update it: replace the file, check its text **and metadata** (title, author, subject,
+keywords — e.g. with your PDF viewer's document properties), commit and push. Never commit a
+version that contains a phone number or confidential details — anything pushed stays in the
+public Git history.
 
 ### Pre-launch checklist
 
@@ -408,6 +407,7 @@ Only once a sanitized PDF (no phone number, no confidential details) is approved
 - [ ] Browser console shows no CSP violations on any page, including the 3D workspace.
 - [ ] A test contact message arrives in `portfolio-prod.contactmessages` (delete it afterwards).
 - [ ] Phone number appears nowhere: page source, `/api/*` responses, Open Graph tags, resume.
+- [ ] Resume buttons open `/resume.pdf` in a new tab.
 - [ ] Link previews look right (e.g. LinkedIn Post Inspector with the production URL).
 - [ ] Mobile: `/workspace` shows the 2D workspace; `/portfolio` reads well at 360 px.
 

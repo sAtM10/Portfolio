@@ -26,6 +26,10 @@ function validateProductionEnv(env) {
   if (env.VITE_API_URL === undefined) {
     problems.push('VITE_API_URL must be set (the API base URL, or empty for same-origin).');
   }
+  // Catches mangled values too, e.g. Git Bash rewriting "/resume.pdf" to a Windows path.
+  if (env.VITE_RESUME_URL && !/^(\/(?!\/)|https:\/\/)/.test(env.VITE_RESUME_URL)) {
+    problems.push('VITE_RESUME_URL must be a site path like /resume.pdf or an https URL.');
+  }
   if (problems.length) {
     throw new Error(`Invalid production build configuration:\n- ${problems.join('\n- ')}`);
   }
