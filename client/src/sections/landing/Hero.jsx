@@ -3,6 +3,7 @@ import { ArrowRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { profile } from '@/data/profile';
+import { trackEvent } from '@/services/analytics';
 
 export function Hero() {
   return (
@@ -44,7 +45,13 @@ export function Hero() {
             className="size-4 transition-transform group-hover:translate-x-0.5"
           />
         </Button>
-        <Button href={profile.resumeUrl} newTab variant="secondary" size="lg">
+        <Button
+          href={profile.resumeUrl}
+          newTab
+          variant="secondary"
+          size="lg"
+          onClick={() => trackEvent('resume_open', { source: 'landing' })}
+        >
           <FileText aria-hidden="true" className="size-4" />
           View resume
         </Button>

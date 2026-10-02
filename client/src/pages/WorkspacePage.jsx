@@ -2,9 +2,12 @@ import { ArrowLeft } from 'lucide-react';
 
 import { PagePlaceholder } from '@/components/layout/PagePlaceholder';
 import { Button } from '@/components/ui/Button';
+import { useTrackEvent } from '@/hooks/useTrackEvent';
 
 // Placeholder until Phase 6 builds the interactive 3D workspace.
 export default function WorkspacePage() {
+  useTrackEvent('workspace_enter');
+
   return (
     <PagePlaceholder
       title="Workspace — Satwik Mukherjee"

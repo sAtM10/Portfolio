@@ -1,12 +1,13 @@
+import { useMemo } from 'react';
+
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Section } from '@/components/ui/Section';
-import { projects } from '@/data/projects';
+import { useProjects } from '@/hooks/usePortfolioContent';
 import { cn } from '@/utils/cn';
 
 import { ProjectCard } from './ProjectCard';
 
 const byOrder = (a, b) => a.order - b.order;
-const professional = projects.filter((p) => p.category === 'professional').sort(byOrder);
-const personal = projects.filter((p) => p.category === 'personal').sort(byOrder);
 
 function ProjectGroup({ title, note, items, gridClassName }) {
   if (!items.length) return null;
@@ -19,7 +20,7 @@ function ProjectGroup({ title, note, items, gridClassName }) {
       </div>
       <ul className={cn('grid gap-4', gridClassName)}>
         {items.map((project) => (
-          <li key={project.id}>
+          <li key={project.slug}>
             <ProjectCard project={project} />
           </li>
         ))}
@@ -29,21 +30,37 @@ function ProjectGroup({ title, note, items, gridClassName }) {
 }
 
 export function ProjectsSection({ id, code }) {
+  const { data: projects, source } = useProjects();
+
+  const { professional, personal } = useMemo(() => {
+    const sorted = [...projects].sort(byOrder);
+    return {
+      professional: sorted.filter((project) => project.category === 'professional'),
+      personal: sorted.filter((project) => project.category === 'personal'),
+    };
+  }, [projects]);
+
   return (
-    <Section id={id} code={code} title="Projects">
-      <div className="space-y-14">
-        <ProjectGroup
-          title="Professional work"
-          note="Enterprise systems at Generali Central Insurance. Summaries are intentionally high-level — my role, the stack and my contribution."
-          items={professional}
-          gridClassName="lg:grid-cols-2"
-        />
-        <ProjectGroup
-          title="Personal projects"
-          items={personal}
-          gridClassName="sm:grid-cols-2 xl:grid-cols-3"
-        />
-      </div>
+    <Section id={id} code={code} title="Projects" data-source={source}>
+      {projects.length === 0 ? (
+        <EmptyState title="No projects are published right now">
+          Project details are being updated — the resume has a full summary in the meantime.
+        </EmptyState>
+      ) : (
+        <div className="space-y-14">
+          <ProjectGroup
+            title="Professional work"
+            note="Enterprise systems at Generali Central Insurance. Summaries are intentionally high-level — my role, the stack and my contribution."
+            items={professional}
+            gridClassName="lg:grid-cols-2"
+          />
+          <ProjectGroup
+            title="Personal projects"
+            items={personal}
+            gridClassName="sm:grid-cols-2 xl:grid-cols-3"
+          />
+        </div>
+      )}
     </Section>
   );
 }

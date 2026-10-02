@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Container } from '@/components/ui/Container';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { profile } from '@/data/profile';
+import { trackEvent } from '@/services/analytics';
 import { formatMonthYear } from '@/utils/date';
 
 function MetaItem({ icon: Icon, children }) {
@@ -46,7 +47,11 @@ export function PortfolioHero() {
         </ul>
 
         <div className="mt-10 flex animate-rise flex-col gap-3 [animation-delay:240ms] sm:flex-row sm:flex-wrap">
-          <Button href={profile.resumeUrl} newTab>
+          <Button
+            href={profile.resumeUrl}
+            newTab
+            onClick={() => trackEvent('resume_open', { source: 'portfolio' })}
+          >
             <FileText aria-hidden="true" className="size-4" />
             View resume
           </Button>

@@ -1,6 +1,7 @@
 import { PageShell } from '@/components/layout/PageShell';
 import { Container } from '@/components/ui/Container';
 import { portfolioSections } from '@/data/portfolioSections';
+import { useTrackEvent } from '@/hooks/useTrackEvent';
 import { AboutSection } from '@/sections/portfolio/AboutSection';
 import { ContactSection } from '@/sections/portfolio/ContactSection';
 import { EducationSection } from '@/sections/portfolio/EducationSection';
@@ -26,6 +27,8 @@ const SECTION_COMPONENTS = {
 
 /** Traditional, non-3D portfolio: one fast, accessible page for recruiters and mobile. */
 export default function PortfolioPage() {
+  useTrackEvent('plain_mode_open');
+
   return (
     <PageShell title="Portfolio — Satwik Mukherjee" footer={<PortfolioFooter />}>
       <PortfolioHero />

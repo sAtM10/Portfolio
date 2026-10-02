@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
+
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Panel } from '@/components/ui/Panel';
 import { Section } from '@/components/ui/Section';
 import { TagList } from '@/components/ui/TagList';
-import { experience } from '@/data/experience';
+import { useExperience } from '@/hooks/usePortfolioContent';
 import { formatDuration, formatMonthYear } from '@/utils/date';
 
 function ExperienceCard({ job }) {
@@ -48,17 +51,24 @@ function ExperienceCard({ job }) {
 }
 
 export function ExperienceSection({ id, code }) {
-  const jobs = [...experience].sort((a, b) => a.order - b.order);
+  const { data: experience, source } = useExperience();
+  const jobs = useMemo(() => [...experience].sort((a, b) => a.order - b.order), [experience]);
 
   return (
-    <Section id={id} code={code} title="Experience">
-      <ol className="space-y-6">
-        {jobs.map((job) => (
-          <li key={job.id}>
-            <ExperienceCard job={job} />
-          </li>
-        ))}
-      </ol>
+    <Section id={id} code={code} title="Experience" data-source={source}>
+      {jobs.length === 0 ? (
+        <EmptyState title="Experience details are being updated">
+          The resume has the full work history in the meantime.
+        </EmptyState>
+      ) : (
+        <ol className="space-y-6">
+          {jobs.map((job) => (
+            <li key={job.slug}>
+              <ExperienceCard job={job} />
+            </li>
+          ))}
+        </ol>
+      )}
     </Section>
   );
 }

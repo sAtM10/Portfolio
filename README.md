@@ -4,7 +4,7 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 4 of 10 complete — Express API + MongoDB Atlas. See [Roadmap](#roadmap).
+> **Status:** Phase 5 of 10 complete — frontend connected to the API. See [Roadmap](#roadmap).
 
 ## Tech stack
 
@@ -186,6 +186,32 @@ reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, 
 - **Content:** profile text, nav and the workspace-object map live in `client/src/data/`, so
   the landing schematic, the 3D scene and the plain portfolio share one source.
 
+## Frontend ↔ API
+
+**Content (projects, experience).** The plain portfolio renders instantly from the bundled copy
+in `client/src/data` and then swaps in the API response (`useApiContent`, session-cached).
+If the API is slow, asleep or down, visitors still see complete content; if it answers with an
+empty list, the section shows an empty state. Each section exposes `data-source="api"` or
+`"fallback"` for debugging.
+
+**Contact form.** `POST /api/contact` with client-side validation first; server field errors
+(400 `details`) are shown inline on the matching fields, rate limits and outages show a banner
+with the email address as a fallback. A successful send records `contact_submit`.
+
+**Analytics.** Anonymous events are sent with `navigator.sendBeacon` as `text/plain` JSON (no
+CORS preflight, survives navigation) and are never sent when the browser signals Global Privacy
+Control or Do Not Track. No cookies, IDs, IPs or user agents are stored; a `sessionStorage` flag
+only prevents counting a reload as a new visit.
+
+| Event             | Sent when                                    | Metadata                                  |
+| ----------------- | -------------------------------------------- | ----------------------------------------- |
+| `portfolio_visit` | First page load in a browser-tab session     | —                                         |
+| `plain_mode_open` | `/portfolio` is opened                       | —                                         |
+| `workspace_enter` | `/workspace` is opened                       | —                                         |
+| `resume_open`     | A resume link is clicked                     | `source`: `landing`, `portfolio` or `nav` |
+| `project_open`    | A project's Code / Live demo link is clicked | `projectSlug`, `link`                     |
+| `contact_submit`  | A contact message is accepted by the API     | —                                         |
+
 ## API endpoints
 
 | Method | Path                                                                                           | Success                                 | Errors                     | Rate limit   |
@@ -202,6 +228,9 @@ reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, 
   `_id`, `__v`, `published` and timestamps are never exposed (`id` is returned instead).
 - `eventType`: `portfolio_visit`, `workspace_enter`, `project_open`, `resume_open`,
   `contact_submit`, `plain_mode_open`. `metadata`: ≤ 5 simple keys with short primitive values.
+- `POST /api/events` also accepts `text/plain` JSON (beacons, 2 KB limit). Both POST routes reject
+  requests whose `Origin` is not in `CLIENT_URL` (403), so **`CLIENT_URL` must list every origin
+  the site is served from**.
 - Security: Helmet headers, CORS allow-list (`CLIENT_URL`), 20 KB body limit, Zod validation,
   Mongoose `sanitizeFilter` + `strictQuery`, in-memory rate limits (IPs never stored),
   contact-form honeypot, 503 while the database is unreachable.
@@ -214,7 +243,7 @@ reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, 
 2. ✅ Base visual design (tokens, typography, landing page)
 3. ✅ Plain portfolio (Hero, About, Experience, Skills, Projects, Education, Contact)
 4. ✅ Express API + MongoDB models, validation, error handling
-5. Frontend ↔ API integration
+5. ✅ Frontend ↔ API integration
 6. Interactive 3D workspace
 7. Animations and transitions
 8. Mobile fallback

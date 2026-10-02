@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import * as contactController from '../controllers/contact.controller.js';
+import { allowedOriginOnly } from '../middleware/allowedOrigin.js';
 import { contactLimiter } from '../middleware/rateLimit.js';
 import { validate } from '../middleware/validate.js';
 import { contactBody } from '../validators/contact.validator.js';
@@ -11,6 +12,7 @@ const router = Router();
 router.post(
   '/',
   contactLimiter,
+  allowedOriginOnly,
   validate({ body: contactBody }),
   contactController.createContactMessage,
 );

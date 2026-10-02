@@ -2,6 +2,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { NavLink } from 'react-router';
 
 import { primaryNav } from '@/data/navigation';
+import { trackEvent } from '@/services/analytics';
 import { cn } from '@/utils/cn';
 
 const itemClass = (isActive) =>
@@ -29,7 +30,10 @@ export function NavItems({ className, onNavigate }) {
               href={item.href}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={onNavigate}
+              onClick={() => {
+                if (item.event) trackEvent(item.event, { source: 'nav' });
+                onNavigate?.();
+              }}
               className={itemClass(false)}
             >
               {item.label}

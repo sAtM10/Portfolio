@@ -1,6 +1,13 @@
+import { useEffect } from 'react';
 import { Outlet, ScrollRestoration } from 'react-router';
 
+import { trackVisit } from '@/services/analytics';
+
 export default function RootLayout() {
+  useEffect(() => {
+    trackVisit();
+  }, []);
+
   return (
     <>
       <a

@@ -1,9 +1,11 @@
 import { CircleAlert, CircleCheck, LoaderCircle, Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 import { TextField } from '@/components/forms/TextField';
 import { Button } from '@/components/ui/Button';
 import { profile } from '@/data/profile';
+import { trackEvent } from '@/services/analytics';
 import { ApiError, sendContactMessage } from '@/services/api';
 import { CONTACT_LIMITS, validateContact } from '@/utils/validateContact';
 
@@ -17,7 +19,7 @@ const readForm = (form) => Object.fromEntries(new FormData(form));
 const describeSubmitError = (error) =>
   error instanceof ApiError && VISITOR_FACING_STATUSES.has(error.status)
     ? error.message
-    : 'The message service is unavailable right now.';
+    : 'The message service is unavailable right now — please try again later.';
 
 export function ContactForm() {
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
@@ -70,7 +72,22 @@ export function ContactForm() {
       setMessageLength(0);
       setHasAttempted(false);
       setStatus('success');
+      trackEvent('contact_submit');
     } catch (error) {
+      const fieldErrors = error instanceof ApiError && error.status === 400 && error.details;
+      const firstInvalid = fieldErrors && FIELD_ORDER.find((field) => fieldErrors[field]);
+
+      if (firstInvalid) {
+        // The server rejected fields the client accepted: show its messages inline.
+        // flushSync re-enables the inputs before focus moves to the first invalid one.
+        flushSync(() => {
+          setErrors(fieldErrors);
+          setStatus('idle');
+        });
+        form.elements[firstInvalid].focus();
+        return;
+      }
+
       setSubmitError(describeSubmitError(error));
       setStatus('error');
     }
@@ -169,8 +186,7 @@ export function ContactForm() {
         >
           <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-danger" />
           <p className="text-fg">
-            Your message couldn&apos;t be sent. {submitError} Please try again, or email me directly
-            at{' '}
+            Your message couldn&apos;t be sent. {submitError} You can also email me directly at{' '}
             <a href={`mailto:${profile.email}`} className="underline underline-offset-4">
               {profile.email}
             </a>
