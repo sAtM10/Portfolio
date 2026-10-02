@@ -1,0 +1,29 @@
+# Render Blueprint for the API (https://render.com/docs/blueprint-spec).
+# Secrets are never stored here: values marked `sync: false` are entered in the
+# Render dashboard when the Blueprint is first applied.
+services:
+  - type: web
+    name: satwik-portfolio-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: NODE_ENV
+        value: production
+      # Render sits behind one proxy hop; needed for correct client IPs in rate limiting.
+      - key: TRUST_PROXY
+        value: '1'
+      # The Vercel site origin(s), comma-separated, e.g. https://satwik-mukherjee.vercel.app
+      - key: CLIENT_URL
+        sync: false
+      # Atlas connection string (with the database user's password).
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB_NAME
+        value: portfolio-prod

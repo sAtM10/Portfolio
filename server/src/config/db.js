@@ -39,14 +39,14 @@ function assertUri(uri) {
   }
 }
 
-export async function connectDatabase(uri) {
+export async function connectDatabase(uri, dbName) {
   assertUri(uri);
 
   mongoose.connection.on('disconnected', () => console.warn('[db] disconnected'));
   mongoose.connection.on('reconnected', () => console.info('[db] reconnected'));
 
   try {
-    await mongoose.connect(uri, { serverSelectionTimeoutMS: 10_000 });
+    await mongoose.connect(uri, { serverSelectionTimeoutMS: 10_000, ...(dbName && { dbName }) });
   } catch (error) {
     throw new Error(describeConnectionError(error), { cause: error });
   }

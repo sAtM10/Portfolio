@@ -45,16 +45,18 @@ export function Hero() {
             className="size-4 transition-transform group-hover:translate-x-0.5"
           />
         </Button>
-        <Button
-          href={profile.resumeUrl}
-          newTab
-          variant="secondary"
-          size="lg"
-          onClick={() => trackEvent('resume_open', { source: 'landing' })}
-        >
-          <FileText aria-hidden="true" className="size-4" />
-          View resume
-        </Button>
+        {profile.resumeUrl && (
+          <Button
+            href={profile.resumeUrl}
+            newTab
+            variant="secondary"
+            size="lg"
+            onClick={() => trackEvent('resume_open', { source: 'landing' })}
+          >
+            <FileText aria-hidden="true" className="size-4" />
+            View resume
+          </Button>
+        )}
       </div>
 
       <p className="mt-4 flex animate-rise flex-wrap items-center gap-x-1 text-sm text-fg-subtle [animation-delay:400ms]">

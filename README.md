@@ -4,7 +4,9 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 7 of 10 complete — animations and transitions. See [Roadmap](#roadmap).
+> **Status:** Phase 10 — production build and deployment configuration are ready; the site is
+> not deployed yet (see [Deployment](#deployment)). Phases 8 and 9 are deferred. See
+> [Roadmap](#roadmap).
 
 ## Tech stack
 
@@ -24,7 +26,8 @@ The backend uses Node's built-in `--env-file-if-exists` and `--watch` flags, so 
 ```
 portfolio/
 ├── client/                 React app (runs independently)
-│   ├── public/             Static files served as-is (favicon, robots.txt, resume)
+│   ├── public/             Static files served as-is (favicon, icons, Open Graph image)
+│   ├── vercel.json         SPA rewrites, cache and security headers (CSP) for Vercel
 │   └── src/
 │       ├── components/     Reusable UI building blocks
 │       ├── sections/       Page sections (About, Experience, Projects…)
@@ -49,6 +52,7 @@ portfolio/
 │       ├── app.js          Express app factory
 │       └── server.js       Entry point (connects to MongoDB, then listens)
 │   └── scripts/seed.js     Idempotent seed from client/src/data
+├── render.yaml             Render Blueprint for the API
 ├── .editorconfig  .gitattributes  .gitignore  .nvmrc  .prettierrc.json
 └── package.json            Convenience scripts only (no dependencies)
 ```
@@ -73,27 +77,34 @@ cp server/.env.example server/.env
 
 On Windows PowerShell use `Copy-Item client/.env.example client/.env` (and the same for server).
 
-3. Place the resume at `client/public/resume.pdf` (served at `/resume.pdf`). It is
-   **git-ignored and local-only** until a sanitized version (no phone number, no confidential
-   details) is approved for deployment — remove the `.gitignore` entry only then.
+3. Optional: place the resume at `client/public/resume.pdf` and set `VITE_RESUME_URL=/resume.pdf`
+   in `client/.env` to show the resume buttons locally. The file is **git-ignored and
+   local-only** until a sanitized version (no phone number, no confidential details) is
+   approved — see [Enabling the public resume](#enabling-the-public-resume).
 
 ## Environment variables
 
 **`server/.env`**
 
-| Variable      | Example                       | Purpose                                                 |
-| ------------- | ----------------------------- | ------------------------------------------------------- |
-| `NODE_ENV`    | `development`                 | `production` disables dev logging/error details         |
-| `PORT`        | `5000`                        | API port                                                |
-| `CLIENT_URL`  | `http://localhost:5173`       | Allowed CORS origin(s), comma-separated                 |
-| `MONGODB_URI` | `mongodb+srv://…/portfolio?…` | Atlas connection string (database `portfolio`)          |
-| `TRUST_PROXY` | _(empty)_                     | Proxy hops for real client IPs; default 1 in production |
+| Variable          | Example                       | Purpose                                                 |
+| ----------------- | ----------------------------- | ------------------------------------------------------- |
+| `NODE_ENV`        | `development`                 | `production` disables dev logging/error details         |
+| `PORT`            | `5000`                        | API port                                                |
+| `CLIENT_URL`      | `http://localhost:5173`       | Allowed CORS origin(s), comma-separated                 |
+| `MONGODB_URI`     | `mongodb+srv://…/portfolio?…` | Atlas connection string (database `portfolio`)          |
+| `TRUST_PROXY`     | _(empty)_                     | Proxy hops for real client IPs; default 1 in production |
+| `MONGODB_DB_NAME` | _(empty)_ / `portfolio-prod`  | Overrides the database named in `MONGODB_URI`           |
 
 **`client/.env`**
 
-| Variable       | Example                 | Purpose                                              |
-| -------------- | ----------------------- | ---------------------------------------------------- |
-| `VITE_API_URL` | `http://localhost:5000` | API base URL, no trailing slash. Empty = same origin |
+| Variable          | Example                 | Purpose                                                                    |
+| ----------------- | ----------------------- | -------------------------------------------------------------------------- |
+| `VITE_API_URL`    | `http://localhost:5000` | API base URL, no trailing slash. Empty = same origin                       |
+| `VITE_SITE_URL`   | `http://localhost:5173` | Public site URL for canonical/Open Graph tags, robots.txt and sitemap.xml  |
+| `VITE_RESUME_URL` | _(empty)_               | Public resume path. Empty hides every resume button and drops `resume.pdf` |
+
+Production builds (`vite build`) refuse to run unless `VITE_SITE_URL` is a valid `https://` URL
+and `VITE_API_URL` is defined, so a deploy can never ship localhost links.
 
 `VITE_*` values are embedded in the browser bundle — never put secrets there. `.env` files are
 git-ignored; only `.env.example` is committed.
@@ -201,15 +212,17 @@ reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, 
 portfolio (shared components in `client/src/sections/content`, laid out with container queries
 so they fit both a page and a narrow panel).
 
-| Object          | Panel                                   |
-| --------------- | --------------------------------------- |
-| 01 Laptop       | About me (+ interests)                  |
-| 02 Monitor      | Experience                              |
-| 03 Server rack  | Tech stack                              |
-| 04 File cabinet | Projects                                |
-| 05 Terminal     | Developer journey (+ education, resume) |
-| 06 Phone        | Contact                                 |
-| 07 Shelf        | Interests                               |
+| Object          | Panel                                    |
+| --------------- | ---------------------------------------- |
+| 01 Laptop       | About me (+ interests)                   |
+| 02 Monitor      | Experience                               |
+| 03 Server rack  | Tech stack                               |
+| 04 File cabinet | Projects                                 |
+| 05 Terminal     | Developer journey (+ education, resume¹) |
+| 06 Phone        | Contact                                  |
+| 07 Shelf        | Interests                                |
+
+¹ Only when `VITE_RESUME_URL` is set.
 
 - **Navigation:** click an object or its numbered marker, or use the object dock (keyboard and
   screen-reader accessible). The panel has previous/next, a close button and closes on Escape
@@ -221,9 +234,10 @@ so they fit both a page and a narrow panel).
 - **Performance:** the scene is its own lazy chunk (only fetched when 3D is shown), renders on
   demand (frames only while something moves), caps the pixel ratio at 1.5, and renders contact
   shadows and the environment once.
-- **2D workspace:** used automatically on screens under 768 px (the 3D chunk is never
-  downloaded), when WebGL is unavailable or the scene fails to start, and on request via the
-  "2D view" toggle (`?view=2d`). Same objects, same panels.
+- **2D workspace:** used automatically on screens under 768 px and on short touch screens
+  (phones in landscape) — the 3D chunk is never downloaded — when WebGL is unavailable or the
+  scene fails to start, and on request via the "2D view" toggle (`?view=2d`). Same objects,
+  same panels.
 - **Reduced motion:** camera moves become instant and the pointer parallax and entrance dolly
   are disabled.
 
@@ -278,6 +292,125 @@ only prevents counting a reload as a new visit.
 - No admin endpoints yet; `published` (projects/experience) and contact `status` are ready for
   a future authenticated admin panel.
 
+## Production build
+
+```bash
+cd client
+npm run build     # needs VITE_SITE_URL (https) and VITE_API_URL — see Environment variables
+npm run preview   # serves client/dist on http://localhost:4173
+```
+
+The build also:
+
+- writes `robots.txt` and `sitemap.xml` (`/`, `/portfolio`, `/workspace`) for `VITE_SITE_URL`;
+- fills the canonical link, Open Graph/Twitter tags (`og-image.png`, 1200×630) and the JSON-LD
+  `Person` record in `index.html` from `VITE_SITE_URL` — public email and location only;
+- deletes `dist/resume.pdf` unless `VITE_RESUME_URL` is set (a local, unsanitized copy can never
+  be deployed by accident);
+- emits fonts as separate files (never inlined), as the CSP only allows fonts from `'self'`.
+
+**Security headers** (`client/vercel.json`, applied by Vercel): a strict Content-Security-Policy
+(scripts, styles, fonts and images from the site itself; API calls to the site and
+`*.onrender.com`; no framing), `nosniff`, `strict-origin-when-cross-origin` referrer,
+`Permissions-Policy` denying camera/microphone/geolocation/payment, and
+`Cross-Origin-Opener-Policy`. Hashed files in `/assets/` are cached for a year; every route
+falls back to `index.html` for client-side routing.
+
+## Deployment
+
+Frontend on **Vercel**, API on **Render**, data in a separate **`portfolio-prod`** database on
+the same Atlas cluster. Both hosts deploy from GitHub on every push to `main`; nothing is
+deployed from a local machine. Both free tiers are enough for this site.
+
+### 1. MongoDB Atlas
+
+1. **Rotate the database user's password** (Database Access → Edit → Edit Password) and
+   update `server/.env` — a password that has been shared anywhere should not reach production.
+2. **Network Access:** Render's free tier has no fixed outbound IP. Add Render's outbound
+   ranges if your service shows them (Render dashboard → service → Connect → Outbound);
+   otherwise allow `0.0.0.0/0` and rely on the strong password and TLS.
+3. **Seed the production database** from your machine (same cluster, different database):
+
+   ```bash
+   cd server
+   MONGODB_DB_NAME=portfolio-prod npm run seed
+   ```
+
+   PowerShell: `$env:MONGODB_DB_NAME='portfolio-prod'; npm run seed; Remove-Item Env:MONGODB_DB_NAME`.
+   Re-run it whenever content in `client/src/data` changes.
+
+### 2. API on Render
+
+1. Push the repository to GitHub (`.env` files and `resume.pdf` are git-ignored).
+2. Render → **New → Blueprint** → select the repository. `render.yaml` creates the
+   `satwik-portfolio-api` web service (root `server/`, `npm ci --omit=dev`, `npm start`,
+   health check `/api/health`, Node 24, `MONGODB_DB_NAME=portfolio-prod`).
+3. Enter the two secret values when prompted:
+   - `MONGODB_URI` — the Atlas connection string with the rotated password.
+   - `CLIENT_URL` — the Vercel URL you will use, e.g. `https://satwik-mukherjee.vercel.app`
+     (comma-separate several; no trailing slash).
+4. After the deploy, open `https://<service>.onrender.com/api/health` — expect
+   `"environment": "production"` and `"database": "connected"`.
+
+### 3. Frontend on Vercel
+
+1. Vercel → **Add New → Project** → import the repository.
+2. **Root Directory:** `client`. Framework preset **Vite** (build `npm run build`, output
+   `dist`) is detected automatically.
+3. **Environment Variables** (Production and Preview):
+
+   | Variable          | Value                                                    |
+   | ----------------- | -------------------------------------------------------- |
+   | `VITE_API_URL`    | `https://<service>.onrender.com`                         |
+   | `VITE_SITE_URL`   | `https://<project>.vercel.app` (must match `CLIENT_URL`) |
+   | `VITE_RESUME_URL` | leave unset until a sanitized resume is committed        |
+
+4. Deploy, then confirm the project's production URL matches `CLIENT_URL` on Render and
+   `VITE_SITE_URL` on Vercel. If you change either, update the other side and redeploy
+   (`VITE_*` values are baked in at build time).
+
+### 4. Tighten and verify
+
+- Replace `https://*.onrender.com` in the CSP `connect-src` (`client/vercel.json`) with the
+  exact API origin, e.g. `https://satwik-portfolio-api.onrender.com`, and push.
+- Run through the [pre-launch checklist](#pre-launch-checklist).
+
+**Preview deployments** (Vercel branch/PR URLs) are not in `CLIENT_URL`, so their contact form
+and analytics are rejected by the API and content comes from the bundled copy. Test the contact
+form on the production URL, or add a preview origin to `CLIENT_URL` temporarily.
+
+**Free-tier cold starts:** Render's free service sleeps after about 15 minutes without traffic
+and takes up to a minute to wake. The site is built for this: content renders immediately from
+the bundled copy, the first page load sends a warm-up request to `/api/health`, and the contact
+form waits up to 30 seconds before showing the email fallback.
+
+**Contact messages** have no admin UI yet: read them in Atlas → Browse Collections →
+`portfolio-prod.contactmessages`. Nobody is notified of new messages, so check periodically.
+
+### Enabling the public resume
+
+Only once a sanitized PDF (no phone number, no confidential details) is approved:
+
+1. Replace `client/public/resume.pdf` with the sanitized version and open it to double-check
+   its text **and metadata** (title, author, subject, keywords).
+2. Remove the `client/public/resume.pdf` line from `.gitignore` and commit the PDF.
+3. Set `VITE_RESUME_URL=/resume.pdf` on Vercel and redeploy. The resume buttons appear on the
+   landing page, the portfolio hero, the navigation and the workspace terminal.
+
+### Pre-launch checklist
+
+- [ ] `npm run lint`, `npm run format:check` and a production build pass locally.
+- [ ] No `.env` file, credentials or unsanitized resume in Git (`git ls-files`).
+- [ ] `/api/health` on Render reports `production` and `connected`.
+- [ ] `/`, `/portfolio`, `/workspace` and a deep link (`/workspace?object=cabinet`) load on the
+      production URL; refreshing a deep link does not 404.
+- [ ] Projects and experience sections report `data-source="api"` (DevTools → Elements).
+- [ ] Browser console shows no CSP violations on any page, including the 3D workspace.
+- [ ] A test contact message arrives in `portfolio-prod.contactmessages` (delete it afterwards).
+- [ ] Phone number appears nowhere: page source, `/api/*` responses, Open Graph tags, resume.
+- [ ] Link previews look right (e.g. LinkedIn Post Inspector with the production URL).
+- [ ] Mobile: `/workspace` shows the 2D workspace; `/portfolio` reads well at 360 px.
+
 ## Roadmap
 
 1. ✅ Project setup
@@ -287,9 +420,14 @@ only prevents counting a reload as a new visit.
 5. ✅ Frontend ↔ API integration
 6. ✅ Interactive 3D workspace
 7. ✅ Animations and transitions
-8. Mobile fallback
-9. Performance + SEO
-10. Production build and deployment
+8. ⏸ Mobile fallback — deferred. Already in place: responsive layouts, 2D workspace on phones
+   (portrait and landscape) and without WebGL. Open: simplified 3D for tablets, real-device
+   testing.
+9. ⏸ Performance + SEO — deferred. Already in place: code-split routes and 3D scene, on-demand
+   rendering, meta/Open Graph/JSON-LD, sitemap and robots.txt. Open: Lighthouse pass, 3D chunk
+   size, image/structured-data refinements.
+10. ✅ Production build and deployment configuration (Vercel + Render); going live needs the
+    steps in [Deployment](#deployment).
 
 ## Troubleshooting
 
@@ -308,6 +446,14 @@ only prevents counting a reload as a new visit.
   change `server.port` in `client/vite.config.js`.
 - **`EADDRINUSE` on 5000** — change `PORT` in `server/.env` _and_ `VITE_API_URL` in
   `client/.env`.
+- **Build fails with `Invalid production build configuration`** — set `VITE_SITE_URL` (https)
+  and `VITE_API_URL` in Vercel's environment variables (or `client/.env` locally).
+- **Production contact form fails with 403 / CORS errors** — the site's exact origin
+  (scheme + host, no trailing slash) must be in Render's `CLIENT_URL`; redeploy after changing it.
+- **Console shows `Refused to connect … violates … connect-src`** — `VITE_API_URL` is not covered
+  by the CSP in `client/vercel.json`; update `connect-src` to the API origin.
+- **First request after a quiet period is slow** — Render free tier waking up (up to a minute);
+  see [Deployment](#deployment).
 - **Placeholder shows "API unreachable"** — start the server, then confirm `VITE_API_URL` matches
   its port and `CLIENT_URL` matches the client's origin (CORS). Restart Vite after editing
   `client/.env`.

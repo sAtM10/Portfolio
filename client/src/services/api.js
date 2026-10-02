@@ -53,5 +53,19 @@ export const getProjects = () => requestList('/projects');
 
 export const getExperience = () => requestList('/experience');
 
+// Generous timeout: the first request after the free-tier API has slept can take a while.
 export const sendContactMessage = (message) =>
-  request('/contact', { method: 'POST', body: message, timeoutMs: 15_000 });
+  request('/contact', { method: 'POST', body: message, timeoutMs: 30_000 });
+
+let warmUpSent = false;
+
+/**
+ * Fire-and-forget health request on first page load. Free hosting tiers put the API to
+ * sleep when idle; this starts waking it while the visitor reads, so content requests
+ * and the contact form are fast by the time they're needed.
+ */
+export function warmUpApi() {
+  if (warmUpSent) return;
+  warmUpSent = true;
+  fetch(apiUrl('/health'), { cache: 'no-store' }).catch(() => {});
+}

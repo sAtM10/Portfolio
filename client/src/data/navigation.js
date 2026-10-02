@@ -5,5 +5,7 @@ import { profile } from './profile';
 export const primaryNav = [
   { label: 'Workspace', to: '/workspace' },
   { label: 'Portfolio', to: '/portfolio' },
-  { label: 'Resume', href: profile.resumeUrl, event: 'resume_open' },
+  ...(profile.resumeUrl
+    ? [{ label: 'Resume', href: profile.resumeUrl, event: 'resume_open' }]
+    : []),
 ];

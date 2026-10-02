@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { Outlet, ScrollRestoration } from 'react-router';
 
 import { trackVisit } from '@/services/analytics';
+import { warmUpApi } from '@/services/api';
 
 export default function RootLayout() {
   useEffect(() => {
+    warmUpApi();
     trackVisit();
   }, []);
 

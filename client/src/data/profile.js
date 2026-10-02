@@ -11,7 +11,9 @@ export const profile = {
   company: 'Generali Central Insurance',
   since: '2024-07',
   email: 'satwik.mukherjee7000@gmail.com',
-  resumeUrl: '/resume.pdf',
+  // Set VITE_RESUME_URL (e.g. /resume.pdf) only once a sanitized resume is deployed;
+  // when unset, every resume button is hidden and the build omits resume.pdf.
+  resumeUrl: import.meta.env.VITE_RESUME_URL || null,
   location: {
     label: 'Navi Mumbai, Maharashtra',
     coordinates: '19.03°N 73.03°E',

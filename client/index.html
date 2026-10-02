@@ -8,8 +8,58 @@
       name="description"
       content="Portfolio of Satwik Mukherjee, Software Development Engineer specializing in .NET, C#, React, Angular, REST APIs and database-driven enterprise applications."
     />
+    <meta name="author" content="Satwik Mukherjee" />
     <meta name="theme-color" content="#0e1116" />
+    <link rel="canonical" href="%VITE_SITE_URL%/" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Social previews (LinkedIn, Slack, X, WhatsApp). Static on purpose: link scrapers
+         don't run JavaScript. %VITE_SITE_URL% is replaced at build time. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Satwik Mukherjee — Digital Workspace" />
+    <meta property="og:title" content="Satwik Mukherjee | Software Development Engineer" />
+    <meta
+      property="og:description"
+      content="Software Development Engineer building .NET Core APIs, SQL Server data layers and Angular / React front ends. Explore the interactive workspace or the plain portfolio."
+    />
+    <meta property="og:url" content="%VITE_SITE_URL%/" />
+    <meta property="og:image" content="%VITE_SITE_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Satwik Mukherjee — Software Development Engineer. Building enterprise applications, APIs and web experiences."
+    />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Satwik Mukherjee | Software Development Engineer" />
+    <meta
+      name="twitter:description"
+      content="Software Development Engineer building .NET Core APIs, SQL Server data layers and Angular / React front ends."
+    />
+    <meta name="twitter:image" content="%VITE_SITE_URL%/og-image.png" />
+
+    <!-- Structured data for search engines (a data block — not executed). -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Satwik Mukherjee",
+        "jobTitle": "Software Development Engineer",
+        "worksFor": { "@type": "Organization", "name": "Generali Central Insurance" },
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Navi Mumbai",
+          "addressRegion": "Maharashtra",
+          "addressCountry": "IN"
+        },
+        "url": "%VITE_SITE_URL%/",
+        "email": "mailto:satwik.mukherjee7000@gmail.com",
+        "sameAs": ["https://www.linkedin.com/in/satwik-mukherjee10", "https://github.com/sAtM10"],
+        "knowsAbout": ["C#", ".NET", "ASP.NET Core", "Angular", "React", "SQL Server", "REST APIs"]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

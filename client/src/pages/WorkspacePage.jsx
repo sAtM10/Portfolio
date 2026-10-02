@@ -22,6 +22,8 @@ const WorkspaceScene = lazy(() => import('@/three/WorkspaceScene'));
 
 const FADE = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } };
 
+const COMPACT_SCREEN = '(max-width: 767px), (pointer: coarse) and (max-height: 500px)';
+
 // Keep the side panel's width in one place for the dock/hint offsets.
 const BESIDE_PANEL = 'md:right-[calc(min(32rem,100vw-2rem)+2rem)]';
 
@@ -49,7 +51,8 @@ export default function WorkspacePage() {
   const selected = workspaceObjectById[searchParams.get('object')] ?? null;
   const wants2D = searchParams.get('view') === '2d';
 
-  const isSmallScreen = useMediaQuery('(max-width: 767px)');
+  // Phones in portrait (narrow) or landscape (short + touch) get the 2D workspace.
+  const isSmallScreen = useMediaQuery(COMPACT_SCREEN);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
   const [webglSupported] = useState(hasWebGL);
   const [sceneFailed, setSceneFailed] = useState(false);

@@ -4,7 +4,7 @@ import { env } from './config/env.js';
 
 // Connect before accepting traffic so the API never serves requests without a database.
 try {
-  await connectDatabase(env.mongodbUri);
+  await connectDatabase(env.mongodbUri, env.mongodbDbName);
 } catch (error) {
   console.error(`[db] ${error.message}`);
   process.exit(1);

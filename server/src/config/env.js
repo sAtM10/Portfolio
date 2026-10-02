@@ -26,5 +26,7 @@ export const env = Object.freeze({
   // Comma-separated so dev + preview + production origins can coexist.
   clientUrls: parseList(process.env.CLIENT_URL ?? 'http://localhost:5173'),
   mongodbUri: process.env.MONGODB_URI ?? '',
+  // Optional: overrides the database named in MONGODB_URI (e.g. portfolio-prod).
+  mongodbDbName: process.env.MONGODB_DB_NAME || undefined,
   trustProxy: parseTrustProxy(process.env.TRUST_PROXY, isProduction),
 });

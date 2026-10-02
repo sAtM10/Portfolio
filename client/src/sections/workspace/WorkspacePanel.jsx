@@ -50,7 +50,7 @@ function PanelBody({ object }) {
         );
       })}
 
-      {object.cta === 'resume' && (
+      {object.cta === 'resume' && profile.resumeUrl && (
         <div className="mt-10 border-t border-line pt-8">
           <Button
             href={profile.resumeUrl}

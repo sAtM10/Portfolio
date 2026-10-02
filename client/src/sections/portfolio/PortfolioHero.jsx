@@ -47,15 +47,17 @@ export function PortfolioHero() {
         </ul>
 
         <div className="mt-10 flex animate-rise flex-col gap-3 [animation-delay:240ms] sm:flex-row sm:flex-wrap">
-          <Button
-            href={profile.resumeUrl}
-            newTab
-            onClick={() => trackEvent('resume_open', { source: 'portfolio' })}
-          >
-            <FileText aria-hidden="true" className="size-4" />
-            View resume
-          </Button>
-          <Button href="#contact" variant="secondary">
+          {profile.resumeUrl && (
+            <Button
+              href={profile.resumeUrl}
+              newTab
+              onClick={() => trackEvent('resume_open', { source: 'portfolio' })}
+            >
+              <FileText aria-hidden="true" className="size-4" />
+              View resume
+            </Button>
+          )}
+          <Button href="#contact" variant={profile.resumeUrl ? 'secondary' : 'primary'}>
             <Mail aria-hidden="true" className="size-4" />
             Get in touch
           </Button>

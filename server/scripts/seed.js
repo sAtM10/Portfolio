@@ -91,7 +91,7 @@ async function syncCollection(Model, docs, label) {
 }
 
 try {
-  await connectDatabase(env.mongodbUri);
+  await connectDatabase(env.mongodbUri, env.mongodbDbName);
   // Ensure every collection's indexes exist, including the SiteEvent TTL index.
   await Promise.all([Project, Experience, ContactMessage, SiteEvent].map((Model) => Model.init()));
   await syncCollection(Project, projectDocs, 'Projects');
