@@ -1,28 +1,43 @@
-import { ArrowLeft } from 'lucide-react';
+import { PageShell } from '@/components/layout/PageShell';
+import { Container } from '@/components/ui/Container';
+import { portfolioSections } from '@/data/portfolioSections';
+import { AboutSection } from '@/sections/portfolio/AboutSection';
+import { ContactSection } from '@/sections/portfolio/ContactSection';
+import { EducationSection } from '@/sections/portfolio/EducationSection';
+import { ExperienceSection } from '@/sections/portfolio/ExperienceSection';
+import { InterestsSection } from '@/sections/portfolio/InterestsSection';
+import { JourneySection } from '@/sections/portfolio/JourneySection';
+import { PortfolioFooter } from '@/sections/portfolio/PortfolioFooter';
+import { PortfolioHero } from '@/sections/portfolio/PortfolioHero';
+import { ProjectsSection } from '@/sections/portfolio/ProjectsSection';
+import { SectionNav } from '@/sections/portfolio/SectionNav';
+import { SkillsSection } from '@/sections/portfolio/SkillsSection';
 
-import { PagePlaceholder } from '@/components/layout/PagePlaceholder';
-import { Button } from '@/components/ui/Button';
-import { profile } from '@/data/profile';
+const SECTION_COMPONENTS = {
+  about: AboutSection,
+  experience: ExperienceSection,
+  skills: SkillsSection,
+  projects: ProjectsSection,
+  journey: JourneySection,
+  education: EducationSection,
+  interests: InterestsSection,
+  contact: ContactSection,
+};
 
-// Placeholder until Phase 3 builds the full plain portfolio.
+/** Traditional, non-3D portfolio: one fast, accessible page for recruiters and mobile. */
 export default function PortfolioPage() {
   return (
-    <PagePlaceholder
-      title="Portfolio — Satwik Mukherjee"
-      eyebrow="Plain portfolio"
-      heading="The traditional portfolio is on its way"
-      description="This page will hold a fast, fully accessible single-page portfolio: about, experience, skills, projects, education and contact. Meanwhile, the resume has everything in one place."
-      actions={
-        <>
-          <Button href={profile.resumeUrl} newTab>
-            View resume
-          </Button>
-          <Button to="/" variant="secondary">
-            <ArrowLeft aria-hidden="true" className="size-4" />
-            Back to start
-          </Button>
-        </>
-      }
-    />
+    <PageShell title="Portfolio — Satwik Mukherjee" footer={<PortfolioFooter />}>
+      <PortfolioHero />
+      <Container className="lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-14">
+        <SectionNav sections={portfolioSections} />
+        <div>
+          {portfolioSections.map(({ id, code }) => {
+            const SectionComponent = SECTION_COMPONENTS[id];
+            return <SectionComponent key={id} id={id} code={code} />;
+          })}
+        </div>
+      </Container>
+    </PageShell>
   );
 }

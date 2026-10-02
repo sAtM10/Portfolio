@@ -25,5 +25,5 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Resume PDF contains a phone number — kept out of git until approved for publishing
+# Resume PDF stays local until a sanitized version is approved for deployment
 client/public/resume.pdf

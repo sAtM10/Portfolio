@@ -4,7 +4,7 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 2 of 10 complete — base visual design and landing page. See [Roadmap](#roadmap).
+> **Status:** Phase 3 of 10 complete — plain portfolio with full content. See [Roadmap](#roadmap).
 
 ## Tech stack
 
@@ -71,9 +71,9 @@ cp server/.env.example server/.env
 
 On Windows PowerShell use `Copy-Item client/.env.example client/.env` (and the same for server).
 
-3. Put the resume PDF at `client/public/resume.pdf` (served at `/resume.pdf`). It is
-   currently git-ignored because it contains a phone number — remove that `.gitignore` entry once
-   a publishable version is in place.
+3. Place the resume at `client/public/resume.pdf` (served at `/resume.pdf`). It is
+   **git-ignored and local-only** until a sanitized version (no phone number, no confidential
+   details) is approved for deployment — remove the `.gitignore` entry only then.
 
 ## Environment variables
 
@@ -122,9 +122,32 @@ Or run inside each folder: `cd server && npm run dev`, `cd client && npm run dev
 | Path         | Page                                                     | Loading       |
 | ------------ | -------------------------------------------------------- | ------------- |
 | `/`          | Landing — hero, workspace schematic, HUD footer           | main bundle   |
-| `/portfolio` | Plain portfolio (placeholder until Phase 3)              | lazy chunk    |
+| `/portfolio` | Plain portfolio — 8 sections, scroll-spy nav, contact form | lazy chunk    |
 | `/workspace` | Interactive 3D workspace (placeholder until Phase 6)     | lazy chunk    |
 | `*`          | 404                                                      | lazy chunk    |
+
+## Editing content
+
+All portfolio text lives in `client/src/data/` — no component changes needed:
+
+| File                   | Content                                                        |
+| ---------------------- | -------------------------------------------------------------- |
+| `profile.js`           | Name, role, headline, about paragraphs, email, location, links |
+| `experience.js`        | Jobs (ISO `YYYY-MM` dates; `endDate: null` = Present)          |
+| `projects.js`          | Professional + personal projects                               |
+| `skills.js`            | Skill groups; `primary: true` highlights the daily stack       |
+| `journey.js`           | Developer-journey timeline                                     |
+| `education.js`         | Degree and certifications                                      |
+| `interests.js`         | Interests (icon keys map to icons in `InterestsSection.jsx`)   |
+| `portfolioSections.js` | Section order and anchor ids (used by the landing legend too)  |
+
+**Project links are optional.** Set `githubUrl` / `liveUrl` to a real URL and the card shows a
+"Code" / "Live demo" button; leave them `null` and no button renders. Never add placeholder URLs.
+
+**Privacy rules:** public contact details are limited to email and location — no phone number
+anywhere (source, metadata, API responses or `resume.pdf`). Professional projects stay high-level:
+role, stack and general contribution only, with no internal URLs, vendor names, credentials,
+architecture or customer/business details.
 
 ## Design system
 
@@ -158,7 +181,7 @@ Errors always use the shape `{ "error": { "message": "…" } }`.
 
 1. ✅ Project setup
 2. ✅ Base visual design (tokens, typography, landing page)
-3. Plain portfolio (Hero, About, Experience, Skills, Projects, Education, Contact)
+3. ✅ Plain portfolio (Hero, About, Experience, Skills, Projects, Education, Contact)
 4. Express API + MongoDB models, validation, error handling
 5. Frontend ↔ API integration
 6. Interactive 3D workspace
