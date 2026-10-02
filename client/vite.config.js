@@ -8,15 +8,20 @@ import { defineConfig, loadEnv } from 'vite';
 // Indexable routes for sitemap.xml.
 const PUBLIC_ROUTES = ['/', '/portfolio', '/workspace'];
 
+const isLocalhost = (url) => ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
+
 /**
  * Production builds must know where the site and API live; failing here beats shipping
- * broken canonical/Open Graph links or an API pointing at localhost.
+ * broken canonical/Open Graph links or an API pointing at localhost. Local production
+ * builds may use localhost for testing; hosted builds (Vercel sets VERCEL=1) may not.
  */
-function validateProductionEnv(env) {
+function validateProductionEnv(env, hosted) {
   const problems = [];
   try {
     const site = new URL(env.VITE_SITE_URL);
-    if (site.protocol !== 'https:' && site.hostname !== 'localhost') {
+    if (hosted && isLocalhost(site)) {
+      problems.push('VITE_SITE_URL points to localhost; use the public site URL.');
+    } else if (site.protocol !== 'https:' && !isLocalhost(site)) {
       problems.push('VITE_SITE_URL must use https.');
     }
   } catch {
@@ -25,6 +30,15 @@ function validateProductionEnv(env) {
   // Empty is allowed (same-origin API); undefined means it was forgotten.
   if (env.VITE_API_URL === undefined) {
     problems.push('VITE_API_URL must be set (the API base URL, or empty for same-origin).');
+  } else if (hosted && env.VITE_API_URL) {
+    try {
+      const api = new URL(env.VITE_API_URL);
+      if (isLocalhost(api) || api.protocol !== 'https:') {
+        problems.push('VITE_API_URL must be the public https API URL, not localhost.');
+      }
+    } catch {
+      problems.push('VITE_API_URL must be a full URL, e.g. https://example.onrender.com');
+    }
   }
   // Catches mangled values too, e.g. Git Bash rewriting "/resume.pdf" to a Windows path.
   if (env.VITE_RESUME_URL && !/^(\/(?!\/)|https:\/\/)/.test(env.VITE_RESUME_URL)) {
@@ -78,7 +92,9 @@ function resumeGuard(resumeEnabled) {
 // https://vite.dev/config/
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
-  if (command === 'build' && mode === 'production') validateProductionEnv(env);
+  if (command === 'build' && mode === 'production') {
+    validateProductionEnv(env, Boolean(process.env.VERCEL));
+  }
   const siteUrl = (env.VITE_SITE_URL ?? '').replace(/\/+$/, '');
 
   return {

@@ -362,7 +362,14 @@ deployed from a local machine. Both free tiers are enough for this site.
    | `VITE_SITE_URL`   | `https://<project>.vercel.app` (must match `CLIENT_URL`) |
    | `VITE_RESUME_URL` | `/resume.pdf`                                            |
 
-4. Deploy, then confirm the project's production URL matches `CLIENT_URL` on Render and
+   Enter these exact values — don't paste `client/.env.example`, whose values are for local
+   development. Builds on Vercel fail if either URL points to localhost.
+
+4. **Domain (optional):** Settings → Domains → **Add Domain** → any free `*.vercel.app` name
+   (e.g. `satwik-mukherjee.vercel.app`) connected to **Production**. Optionally edit the
+   generated domain to redirect to it. Deployment-specific URLs (with a hash) stay behind
+   Vercel's login — share only the production domain.
+5. Deploy, then confirm the project's production URL matches `CLIENT_URL` on Render and
    `VITE_SITE_URL` on Vercel. If you change either, update the other side and redeploy
    (`VITE_*` values are baked in at build time).
 
@@ -447,7 +454,11 @@ public Git history.
 - **`EADDRINUSE` on 5000** — change `PORT` in `server/.env` _and_ `VITE_API_URL` in
   `client/.env`.
 - **Build fails with `Invalid production build configuration`** — set `VITE_SITE_URL` (https)
-  and `VITE_API_URL` in Vercel's environment variables (or `client/.env` locally).
+  and `VITE_API_URL` in Vercel's environment variables (or `client/.env` locally); on Vercel
+  neither may point to localhost.
+- **Live site shows `localhost` in link previews or the console blocks `http://localhost:5000`**
+  — the deployment was built with local values. Fix the Vercel environment variables and
+  redeploy (`VITE_*` values are baked in at build time).
 - **Production contact form fails with 403 / CORS errors** — the site's exact origin
   (scheme + host, no trailing slash) must be in Render's `CLIENT_URL`; redeploy after changing it.
 - **Console shows `Refused to connect … violates … connect-src`** — `VITE_API_URL` is not covered
