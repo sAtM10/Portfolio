@@ -4,7 +4,7 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 6 of 10 complete — interactive 3D workspace. See [Roadmap](#roadmap).
+> **Status:** Phase 7 of 10 complete — animations and transitions. See [Roadmap](#roadmap).
 
 ## Tech stack
 
@@ -181,8 +181,17 @@ reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, 
   via Fontsource — no third-party font requests.
 - **Primitives:** `Button` (primary / secondary / ghost; renders Link, a or button),
   `Panel` (glass surface), `Container`, `Eyebrow`.
-- **Motion:** CSS-only entrance (`animate-rise`) for now; everything is disabled under
-  `prefers-reduced-motion: reduce`.
+- **Motion:** restrained and purposeful, chosen per page to protect bundle size:
+  - Route changes cross-fade through the browser's View Transitions API (`viewTransition` on
+    every router link) — no JavaScript animation cost, skipped where unsupported.
+  - Landing and plain portfolio use CSS only: hero entrance, schematic "scan" reveal,
+    scroll-reveal sections (`Reveal`, IntersectionObserver), a CSS-measured sliding indicator
+    in the section nav and the contact confirmation.
+  - The workspace uses Motion (`LazyMotion` + `domAnimation`, only in its own chunk) for the
+    panel's slide-in/out and content cross-fade, and the 3D scene eases hover lift and a soft
+    floor glow inside the render loop.
+  - `prefers-reduced-motion` disables CSS animations and view transitions, shows revealed
+    content immediately, limits Motion to fades and makes 3D camera moves instant.
 - **Content:** profile text, nav and the workspace-object map live in `client/src/data/`, so
   the landing schematic, the 3D scene and the plain portfolio share one source.
 
@@ -277,7 +286,7 @@ only prevents counting a reload as a new visit.
 4. ✅ Express API + MongoDB models, validation, error handling
 5. ✅ Frontend ↔ API integration
 6. ✅ Interactive 3D workspace
-7. Animations and transitions
+7. ✅ Animations and transitions
 8. Mobile fallback
 9. Performance + SEO
 10. Production build and deployment

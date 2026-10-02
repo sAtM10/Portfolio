@@ -19,6 +19,7 @@ export function NavItems({ className, onNavigate }) {
         <li key={item.label}>
           {item.to ? (
             <NavLink
+              viewTransition
               to={item.to}
               onClick={onNavigate}
               className={({ isActive }) => itemClass(isActive)}

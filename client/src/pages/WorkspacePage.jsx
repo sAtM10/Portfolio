@@ -1,7 +1,9 @@
+import { AnimatePresence, m } from 'motion/react';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { MotionProvider } from '@/components/motion/MotionProvider';
 import { workspaceObjectById } from '@/data/workspaceObjects';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
@@ -17,6 +19,8 @@ import { hasWebGL } from '@/utils/webgl';
 
 // three.js + React Three Fiber live in their own chunk, fetched only when 3D is shown.
 const WorkspaceScene = lazy(() => import('@/three/WorkspaceScene'));
+
+const FADE = { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } };
 
 // Keep the side panel's width in one place for the dock/hint offsets.
 const BESIDE_PANEL = 'md:right-[calc(min(32rem,100vw-2rem)+2rem)]';
@@ -104,81 +108,100 @@ export default function WorkspacePage() {
   }, [selected, closePanel]);
 
   return (
-    <main id="main" tabIndex={-1} className="fixed inset-0 overflow-hidden outline-none">
-      <title>Workspace — Satwik Mukherjee</title>
-      <h1 className="sr-only">Satwik Mukherjee — digital workspace</h1>
+    <MotionProvider>
+      <main id="main" tabIndex={-1} className="fixed inset-0 overflow-hidden outline-none">
+        <title>Workspace — Satwik Mukherjee</title>
+        <h1 className="sr-only">Satwik Mukherjee — digital workspace</h1>
 
-      {/* First in source order so keyboard and screen-reader users meet it first. */}
-      <WorkspaceHud
-        is3D={is3D}
-        canToggleView={canUse3D}
-        onToggleView={toggleView}
-        panelOpen={Boolean(selected)}
-      />
+        {/* First in source order so keyboard and screen-reader users meet it first. */}
+        <WorkspaceHud
+          is3D={is3D}
+          canToggleView={canUse3D}
+          onToggleView={toggleView}
+          panelOpen={Boolean(selected)}
+        />
 
-      {is3D ? (
-        <>
-          <p className="sr-only">
-            An interactive 3D desk. The 3D scene is visual only: use the workspace objects list to
-            open each section.
-          </p>
-          <ErrorBoundary onError={() => setSceneFailed(true)}>
-            <Suspense fallback={null}>
-              <WorkspaceScene
-                selectedId={selected?.id ?? null}
-                hoveredId={hoveredId}
-                onHover={setHoveredId}
-                onHoverEnd={handleHoverEnd}
-                onSelect={selectObject}
-                onDeselect={closePanel}
-                reducedMotion={reducedMotion}
-                markerElementsRef={markerElementsRef}
-                onReady={() => setSceneReady(true)}
-              />
-            </Suspense>
-          </ErrorBoundary>
-          {!selected && (
-            <MarkerLayer
-              elementsRef={markerElementsRef}
+        {is3D ? (
+          <>
+            <p className="sr-only">
+              An interactive 3D desk. The 3D scene is visual only: use the workspace objects list to
+              open each section.
+            </p>
+            <ErrorBoundary onError={() => setSceneFailed(true)}>
+              <Suspense fallback={null}>
+                <WorkspaceScene
+                  selectedId={selected?.id ?? null}
+                  hoveredId={hoveredId}
+                  onHover={setHoveredId}
+                  onHoverEnd={handleHoverEnd}
+                  onSelect={selectObject}
+                  onDeselect={closePanel}
+                  reducedMotion={reducedMotion}
+                  markerElementsRef={markerElementsRef}
+                  onReady={() => setSceneReady(true)}
+                />
+              </Suspense>
+            </ErrorBoundary>
+            <AnimatePresence>
+              {!selected && (
+                <m.div key="markers" {...FADE}>
+                  <MarkerLayer
+                    elementsRef={markerElementsRef}
+                    hoveredId={hoveredId}
+                    onHover={setHoveredId}
+                    onHoverEnd={handleHoverEnd}
+                    onSelect={selectObject}
+                  />
+                </m.div>
+              )}
+            </AnimatePresence>
+            <SceneLoading hidden={sceneReady} />
+
+            <AnimatePresence>
+              {!selected && sceneReady && (
+                <m.p
+                  key="hint"
+                  aria-hidden="true"
+                  {...FADE}
+                  className="pointer-events-none fixed inset-x-4 bottom-28 z-20 text-center font-mono text-[0.6875rem] tracking-[0.16em] text-fg-subtle uppercase"
+                >
+                  Click an object on the desk — or pick one below
+                </m.p>
+              )}
+            </AnimatePresence>
+            <ObjectDock
+              selectedId={selected?.id}
               hoveredId={hoveredId}
+              onSelect={selectObject}
               onHover={setHoveredId}
               onHoverEnd={handleHoverEnd}
-              onSelect={selectObject}
+              className={cn(
+                'fixed inset-x-4 bottom-4 z-20 flex justify-center transition-[right] duration-500 ease-(--ease-cinematic)',
+                selected && BESIDE_PANEL,
+              )}
+            />
+          </>
+        ) : (
+          <WorkspaceGrid
+            reason={describe2DReason({ webglSupported, sceneFailed, isSmallScreen })}
+            selectedId={selected?.id}
+            onSelect={selectObject}
+          />
+        )}
+
+        {/* AnimatePresence keeps the panel mounted while it slides out after closing. */}
+        <AnimatePresence>
+          {selected && (
+            <WorkspacePanel
+              key="panel"
+              object={selected}
+              isSheet={isSmallScreen}
+              onClose={closePanel}
+              onNavigate={selectObject}
             />
           )}
-          <SceneLoading hidden={sceneReady} />
-
-          {!selected && (
-            <p
-              aria-hidden="true"
-              className="pointer-events-none fixed inset-x-4 bottom-28 z-20 text-center font-mono text-[0.6875rem] tracking-[0.16em] text-fg-subtle uppercase"
-            >
-              Click an object on the desk — or pick one below
-            </p>
-          )}
-          <ObjectDock
-            selectedId={selected?.id}
-            hoveredId={hoveredId}
-            onSelect={selectObject}
-            onHover={setHoveredId}
-            onHoverEnd={handleHoverEnd}
-            className={cn(
-              'fixed inset-x-4 bottom-4 z-20 flex justify-center',
-              selected && BESIDE_PANEL,
-            )}
-          />
-        </>
-      ) : (
-        <WorkspaceGrid
-          reason={describe2DReason({ webglSupported, sceneFailed, isSmallScreen })}
-          selectedId={selected?.id}
-          onSelect={selectObject}
-        />
-      )}
-
-      {selected && (
-        <WorkspacePanel object={selected} onClose={closePanel} onNavigate={selectObject} />
-      )}
-    </main>
+        </AnimatePresence>
+      </main>
+    </MotionProvider>
   );
 }

@@ -12,7 +12,7 @@ export function SiteHeader() {
   return (
     <header className="relative z-20">
       <Container size="wide" className="flex h-16 items-center justify-between sm:h-20">
-        <Link to="/" className="group flex items-center gap-3 rounded-lg">
+        <Link to="/" viewTransition className="group flex items-center gap-3 rounded-lg">
           <LogoMark className="size-8 transition-transform duration-300 group-hover:-rotate-6" />
           <span className="font-mono text-xs tracking-[0.18em] text-fg-muted uppercase transition-colors group-hover:text-fg">
             {profile.name}

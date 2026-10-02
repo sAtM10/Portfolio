@@ -97,6 +97,7 @@ export default function WorkspaceScene({
           id={id}
           hovered={hoveredId === id}
           selected={selectedId === id}
+          reducedMotion={reducedMotion}
           onHover={onHover}
           onHoverEnd={onHoverEnd}
           onSelect={onSelect}

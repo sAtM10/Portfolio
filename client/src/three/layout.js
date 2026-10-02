@@ -1,6 +1,7 @@
 // Scene layout in metres (y up; the desk front edge faces +z towards the camera).
 // One place for object placement, marker positions and camera poses so the scene,
-// markers and camera rig always agree.
+// markers and camera rig always agree. `halo` is the hover/selection glow on the surface
+// under each object (size in metres, y relative to the object's origin).
 
 export const DESK_TOP_Y = 0.775;
 
@@ -8,39 +9,46 @@ export const OBJECT_LAYOUT = {
   rack: {
     position: [-1.65, 0, -0.45],
     marker: [-1.65, 1.78, -0.15],
+    halo: { size: [1.1, 1.1], y: 0.004 },
     focus: { position: [-1.05, 1.2, 2.15], target: [-1.65, 0.85, -0.2] },
   },
   terminal: {
     position: [-0.82, DESK_TOP_Y, -0.55],
     rotationY: 0.32,
     marker: [-0.84, 1.42, -0.5],
+    halo: { size: [0.55, 0.4], y: 0.002 },
     focus: { position: [-0.6, 1.22, 0.6], target: [-0.82, 1.15, -0.55] },
   },
   monitor: {
     position: [0, DESK_TOP_Y, -0.62],
     marker: [0.44, 1.7, -0.6],
+    halo: { size: [1.3, 0.55], y: 0.002 },
     focus: { position: [0, 1.32, 1.3], target: [0, 1.25, -0.62] },
   },
   laptop: {
     position: [0.78, DESK_TOP_Y, -0.3],
     rotationY: -0.35,
     marker: [0.8, 1.12, -0.36],
+    halo: { size: [0.6, 0.5], y: 0.002 },
     focus: { position: [0.6, 1.2, 0.62], target: [0.78, 0.9, -0.34] },
   },
   phone: {
     position: [1.18, DESK_TOP_Y, -0.3],
     rotationY: -0.5,
     marker: [1.2, 1.02, -0.3],
+    halo: { size: [0.28, 0.26], y: 0.002 },
     focus: { position: [1.02, 1.05, 0.42], target: [1.18, 0.86, -0.3] },
   },
   cabinet: {
     position: [0.95, 0, -0.42],
     marker: [0.95, 0.68, -0.1],
+    halo: { size: [0.85, 0.85], y: 0.004 },
     focus: { position: [0.8, 0.72, 1.15], target: [0.95, 0.35, -0.15] },
   },
   shelf: {
     position: [0.95, 0, -0.8],
     marker: [0.95, 2.03, -0.72],
+    halo: { size: [1.0, 0.3], y: 1.767 },
     focus: { position: [0.8, 1.78, 0.85], target: [0.95, 1.82, -0.75] },
   },
 };

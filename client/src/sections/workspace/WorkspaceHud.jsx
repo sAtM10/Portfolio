@@ -11,12 +11,16 @@ export function WorkspaceHud({ is3D, canToggleView, onToggleView, panelOpen }) {
   return (
     <header
       className={cn(
-        'pointer-events-none fixed inset-x-0 top-0 z-20 flex items-start justify-between gap-4 p-4 md:p-6',
+        'pointer-events-none fixed inset-x-0 top-0 z-20 flex items-start justify-between gap-4 p-4 transition-[padding] duration-500 ease-(--ease-cinematic) md:p-6',
         // Keep the actions clear of the side panel on wide screens.
         panelOpen && 'md:pr-[calc(min(32rem,100vw-2rem)+2.5rem)]',
       )}
     >
-      <Link to="/" className="group pointer-events-auto flex items-center gap-3 rounded-lg">
+      <Link
+        to="/"
+        viewTransition
+        className="group pointer-events-auto flex items-center gap-3 rounded-lg"
+      >
         <LogoMark className="size-8" />
         <span className="hidden font-mono text-[0.6875rem] tracking-[0.16em] uppercase sm:block">
           <span className="block text-fg-muted transition-colors group-hover:text-fg">

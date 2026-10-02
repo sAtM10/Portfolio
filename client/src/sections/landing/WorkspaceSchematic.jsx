@@ -69,7 +69,7 @@ export function WorkspaceSchematic() {
         viewBox="0 0 720 450"
         role="img"
         aria-label="Line drawing of a developer desk with a server rack, terminal, monitor, laptop, phone, file cabinet and a shelf of hobbies."
-        className="mt-4 h-auto w-full"
+        className="mt-4 h-auto w-full animate-wipe [animation-delay:450ms]"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.25"
@@ -210,6 +210,7 @@ export function WorkspaceSchematic() {
           {workspaceObjects.map(({ id, code, object, title }) => (
             <li key={id}>
               <Link
+                viewTransition
                 to={`/workspace?object=${id}`}
                 onPointerEnter={() => setActiveId(id)}
                 onPointerLeave={() => setActiveId(null)}

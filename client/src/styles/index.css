@@ -37,21 +37,29 @@
   --animate-rise: rise 0.8s var(--ease-cinematic) both;
   --animate-blink: blink 1.1s steps(1) infinite;
   --animate-fade-in: fade-in 0.4s ease-out both;
-  --animate-panel-in: panel-in 0.45s var(--ease-cinematic) both;
-  --animate-sheet-in: sheet-in 0.4s var(--ease-cinematic) both;
   --animate-scan: scan 1.4s ease-in-out infinite;
+  --animate-wipe: wipe 1.4s var(--ease-cinematic) both;
 
-  @keyframes panel-in {
+  /* Left-to-right "blueprint scan" reveal (landing schematic). */
+  @keyframes wipe {
     from {
-      opacity: 0;
-      transform: translateX(24px);
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
     }
   }
 
-  @keyframes sheet-in {
+  @keyframes route-in {
     from {
       opacity: 0;
-      transform: translateY(32px);
+      transform: translateY(8px);
+    }
+  }
+
+  @keyframes route-out {
+    to {
+      opacity: 0;
     }
   }
 
@@ -155,6 +163,29 @@
     backdrop-filter: none;
   }
 
+  /* Scroll reveal (components/ui/Reveal.jsx): hidden until first scrolled into view. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.6s var(--ease-cinematic) var(--reveal-delay, 0ms),
+      transform 0.6s var(--ease-cinematic) var(--reveal-delay, 0ms);
+  }
+
+  .reveal[data-revealed] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Never hide content for reduced-motion users, or on paper (sections never scrolled
+     into view would otherwise print blank). */
+  @media (prefers-reduced-motion: reduce), print {
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   /* Fixed, non-interactive backdrop: key light, fill light, film grain, vignette. */
   .atmosphere {
     position: fixed;
@@ -192,6 +223,16 @@
   }
 }
 
+/* Route changes: React Router links with `viewTransition` cross-fade the page through the
+   View Transitions API. Unsupported browsers simply navigate without animation. */
+::view-transition-old(root) {
+  animation: route-out 0.2s ease-out both;
+}
+
+::view-transition-new(root) {
+  animation: route-in 0.4s var(--ease-cinematic) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -199,5 +240,11 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

@@ -16,6 +16,34 @@ const VISITOR_FACING_STATUSES = new Set([400, 422, 429]);
 
 const readForm = (form) => Object.fromEntries(new FormData(form));
 
+/** Confirmation shown after sending; fades up and moves focus to its heading on mount. */
+function SuccessMessage({ onReset }) {
+  const headingRef = useRef(null);
+
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
+
+  return (
+    <div className="animate-rise py-6">
+      <CircleCheck aria-hidden="true" className="size-8 text-success" />
+      <h3
+        ref={headingRef}
+        tabIndex={-1}
+        className="mt-4 text-xl font-semibold tracking-tight outline-none"
+      >
+        Message sent
+      </h3>
+      <p className="mt-2 text-fg-muted">
+        Thanks for reaching out — I&apos;ll reply to the email address you provided.
+      </p>
+      <Button variant="secondary" className="mt-6" onClick={onReset}>
+        Send another message
+      </Button>
+    </div>
+  );
+}
+
 const describeSubmitError = (error) =>
   error instanceof ApiError && VISITOR_FACING_STATUSES.has(error.status)
     ? error.message
@@ -27,12 +55,6 @@ export function ContactForm() {
   const [hasAttempted, setHasAttempted] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [messageLength, setMessageLength] = useState(0);
-  const successHeadingRef = useRef(null);
-
-  useEffect(() => {
-    if (status === 'success') successHeadingRef.current?.focus();
-  }, [status]);
-
   // After the first submit attempt, re-validate as the visitor types.
   const handleChange = (event) => {
     if (event.target.name === 'message') setMessageLength(event.target.value.length);
@@ -93,37 +115,16 @@ export function ContactForm() {
     }
   };
 
-  if (status === 'success') {
-    return (
-      <div className="py-6">
-        <CircleCheck aria-hidden="true" className="size-8 text-success" />
-        <h3
-          ref={successHeadingRef}
-          tabIndex={-1}
-          className="mt-4 text-xl font-semibold tracking-tight outline-none"
-        >
-          Message sent
-        </h3>
-        <p className="mt-2 text-fg-muted">
-          Thanks for reaching out — I&apos;ll reply to the email address you provided.
-        </p>
-        <Button variant="secondary" className="mt-6" onClick={() => setStatus('idle')}>
-          Send another message
-        </Button>
-      </div>
-    );
-  }
-
   const isSubmitting = status === 'submitting';
 
-  return (
+  const formElement = (
     <form
       noValidate
       aria-labelledby="contact-form-title"
       aria-busy={isSubmitting}
       onSubmit={handleSubmit}
       onChange={handleChange}
-      className="@container relative grid gap-5"
+      className="@container relative grid animate-fade-in gap-5"
     >
       <h3 id="contact-form-title" className="text-lg font-semibold tracking-tight">
         Send a message
@@ -207,4 +208,7 @@ export function ContactForm() {
       </div>
     </form>
   );
+
+  // CSS entrance animations only (no animation library on the plain portfolio).
+  return status === 'success' ? <SuccessMessage onReset={() => setStatus('idle')} /> : formElement;
 }

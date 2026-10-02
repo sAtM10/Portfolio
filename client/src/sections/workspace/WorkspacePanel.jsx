@@ -1,4 +1,5 @@
 import { ArrowLeft, ArrowRight, FileText, X } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
 import { useEffect, useRef } from 'react';
 
 import { Button } from '@/components/ui/Button';
@@ -7,6 +8,26 @@ import { profile } from '@/data/profile';
 import { workspaceObjects } from '@/data/workspaceObjects';
 import { SECTION_CONTENT } from '@/sections/content';
 import { trackEvent } from '@/services/analytics';
+
+const EXIT = { duration: 0.25, ease: 'easeIn' };
+
+const SIDE_MOTION = {
+  initial: { opacity: 0, x: 32 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 32, transition: EXIT },
+};
+
+const SHEET_MOTION = {
+  initial: { opacity: 0, y: 48 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 48, transition: EXIT },
+};
+
+const BODY_MOTION = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, transition: { duration: 0.12 } },
+};
 
 function PanelBody({ object }) {
   const section = sectionById[object.section];
@@ -47,9 +68,10 @@ function PanelBody({ object }) {
 
 /**
  * Non-modal side panel (bottom sheet on small screens) for one workspace object.
- * Focus moves to its heading when it opens or switches object.
+ * Focus moves to its heading when it opens or switches object. Rendered inside
+ * AnimatePresence by the page, so it slides in and out (sideways, or up as a sheet).
  */
-export function WorkspacePanel({ object, onClose, onNavigate }) {
+export function WorkspacePanel({ object, isSheet, onClose, onNavigate }) {
   const headingRef = useRef(null);
   const titleId = `workspace-panel-title`;
 
@@ -63,12 +85,13 @@ export function WorkspacePanel({ object, onClose, onNavigate }) {
   const next = workspaceObjects[(index + 1) % count];
 
   return (
-    <section
+    <m.section
       id="workspace-panel"
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
-      className="workspace-panel fixed inset-x-3 bottom-3 z-30 flex max-h-[80dvh] animate-sheet-in flex-col rounded-2xl md:inset-x-auto md:top-4 md:right-4 md:bottom-4 md:max-h-none md:w-[min(32rem,calc(100vw-2rem))] md:animate-panel-in"
+      {...(isSheet ? SHEET_MOTION : SIDE_MOTION)}
+      className="workspace-panel fixed inset-x-3 bottom-3 z-30 flex max-h-[80dvh] flex-col rounded-2xl md:inset-x-auto md:top-4 md:right-4 md:bottom-4 md:max-h-none md:w-[min(32rem,calc(100vw-2rem))]"
     >
       <header className="flex items-start justify-between gap-4 border-b border-line p-5 md:p-6">
         <div className="min-w-0">
@@ -99,10 +122,16 @@ export function WorkspacePanel({ object, onClose, onNavigate }) {
         </button>
       </header>
 
-      {/* Keyed so switching objects starts at the top of the new content. */}
-      <div key={object.id} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 md:p-6">
-        <PanelBody object={object} />
-      </div>
+      {/* Keyed so switching objects cross-fades and starts at the top of the new content. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <m.div
+          key={object.id}
+          {...BODY_MOTION}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 md:p-6"
+        >
+          <PanelBody object={object} />
+        </m.div>
+      </AnimatePresence>
 
       <footer className="flex items-center justify-between gap-2 border-t border-line p-2">
         <Button variant="ghost" size="sm" onClick={() => onNavigate(previous.id)}>
@@ -116,6 +145,6 @@ export function WorkspacePanel({ object, onClose, onNavigate }) {
           <ArrowRight aria-hidden="true" className="size-3.5" />
         </Button>
       </footer>
-    </section>
+    </m.section>
   );
 }

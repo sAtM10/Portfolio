@@ -38,7 +38,7 @@ export function Button({
 
   if (to) {
     return (
-      <Link to={to} className={classes} {...props}>
+      <Link to={to} viewTransition className={classes} {...props}>
         {children}
       </Link>
     );
