@@ -146,7 +146,7 @@ export const projects = [
     title: 'Iris Control',
     category: 'personal',
     period: null,
-    description: 'A computer-vision project built around iris (eye) tracking.',
+    description: 'A computer-vision project.',
     highlights: [],
     technologies: ['Computer vision'],
     githubUrl: null,
