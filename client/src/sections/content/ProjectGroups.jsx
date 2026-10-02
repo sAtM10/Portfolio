@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Section } from '@/components/ui/Section';
 import { useProjects } from '@/hooks/usePortfolioContent';
 import { cn } from '@/utils/cn';
 
@@ -29,7 +28,8 @@ function ProjectGroup({ title, note, items, gridClassName }) {
   );
 }
 
-export function ProjectsSection({ id, code }) {
+/** Professional and personal projects from the API (bundled copy until it responds). */
+export function ProjectGroups() {
   const { data: projects, source } = useProjects();
 
   const { professional, personal } = useMemo(() => {
@@ -41,7 +41,7 @@ export function ProjectsSection({ id, code }) {
   }, [projects]);
 
   return (
-    <Section id={id} code={code} title="Projects" data-source={source}>
+    <div data-source={source}>
       {projects.length === 0 ? (
         <EmptyState title="No projects are published right now">
           Project details are being updated — the resume has a full summary in the meantime.
@@ -52,15 +52,15 @@ export function ProjectsSection({ id, code }) {
             title="Professional work"
             note="Enterprise systems at Generali Central Insurance. Summaries are intentionally high-level — my role, the stack and my contribution."
             items={professional}
-            gridClassName="lg:grid-cols-2"
+            gridClassName="@2xl:grid-cols-2"
           />
           <ProjectGroup
             title="Personal projects"
             items={personal}
-            gridClassName="sm:grid-cols-2 xl:grid-cols-3"
+            gridClassName="@lg:grid-cols-2 @3xl:grid-cols-3"
           />
         </div>
       )}
-    </Section>
+    </div>
   );
 }

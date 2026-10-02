@@ -4,7 +4,7 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 5 of 10 complete — frontend connected to the API. See [Roadmap](#roadmap).
+> **Status:** Phase 6 of 10 complete — interactive 3D workspace. See [Roadmap](#roadmap).
 
 ## Tech stack
 
@@ -140,12 +140,12 @@ Or run inside each folder: `cd server && npm run dev`, `cd client && npm run dev
 
 ## Routes (client)
 
-| Path         | Page                                                       | Loading     |
-| ------------ | ---------------------------------------------------------- | ----------- |
-| `/`          | Landing — hero, workspace schematic, HUD footer            | main bundle |
-| `/portfolio` | Plain portfolio — 8 sections, scroll-spy nav, contact form | lazy chunk  |
-| `/workspace` | Interactive 3D workspace (placeholder until Phase 6)       | lazy chunk  |
-| `*`          | 404                                                        | lazy chunk  |
+| Path         | Page                                                                              | Loading                                      |
+| ------------ | --------------------------------------------------------------------------------- | -------------------------------------------- |
+| `/`          | Landing — hero, workspace schematic, HUD footer                                   | main bundle                                  |
+| `/portfolio` | Plain portfolio — 8 sections, scroll-spy nav, contact form                        | lazy chunk                                   |
+| `/workspace` | Interactive workspace — 3D desk (2D on small screens), `?object=<id>`, `?view=2d` | lazy chunk; 3D scene is a further lazy chunk |
+| `*`          | 404                                                                               | lazy chunk                                   |
 
 ## Editing content
 
@@ -185,6 +185,38 @@ reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, 
   `prefers-reduced-motion: reduce`.
 - **Content:** profile text, nav and the workspace-object map live in `client/src/data/`, so
   the landing schematic, the 3D scene and the plain portfolio share one source.
+
+## Interactive workspace
+
+`/workspace` is a desk you explore: each object opens a panel with the same content as the plain
+portfolio (shared components in `client/src/sections/content`, laid out with container queries
+so they fit both a page and a narrow panel).
+
+| Object          | Panel                                   |
+| --------------- | --------------------------------------- |
+| 01 Laptop       | About me (+ interests)                  |
+| 02 Monitor      | Experience                              |
+| 03 Server rack  | Tech stack                              |
+| 04 File cabinet | Projects                                |
+| 05 Terminal     | Developer journey (+ education, resume) |
+| 06 Phone        | Contact                                 |
+| 07 Shelf        | Interests                               |
+
+- **Navigation:** click an object or its numbered marker, or use the object dock (keyboard and
+  screen-reader accessible). The panel has previous/next, a close button and closes on Escape
+  (except while typing in a form). Panels are deep-linkable: `/workspace?object=monitor`.
+- **3D scene** (`client/src/three`): React Three Fiber with primitives only — no model or HDR
+  downloads. Object placement, marker anchors and camera poses live in `three/layout.js`.
+  The camera eases to each object and the projection shifts so the object stays centred beside
+  the side panel.
+- **Performance:** the scene is its own lazy chunk (only fetched when 3D is shown), renders on
+  demand (frames only while something moves), caps the pixel ratio at 1.5, and renders contact
+  shadows and the environment once.
+- **2D workspace:** used automatically on screens under 768 px (the 3D chunk is never
+  downloaded), when WebGL is unavailable or the scene fails to start, and on request via the
+  "2D view" toggle (`?view=2d`). Same objects, same panels.
+- **Reduced motion:** camera moves become instant and the pointer parallax and entrance dolly
+  are disabled.
 
 ## Frontend ↔ API
 
@@ -244,7 +276,7 @@ only prevents counting a reload as a new visit.
 3. ✅ Plain portfolio (Hero, About, Experience, Skills, Projects, Education, Contact)
 4. ✅ Express API + MongoDB models, validation, error handling
 5. ✅ Frontend ↔ API integration
-6. Interactive 3D workspace
+6. ✅ Interactive 3D workspace
 7. Animations and transitions
 8. Mobile fallback
 9. Performance + SEO

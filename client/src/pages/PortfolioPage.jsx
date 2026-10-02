@@ -1,29 +1,12 @@
 import { PageShell } from '@/components/layout/PageShell';
 import { Container } from '@/components/ui/Container';
+import { Section } from '@/components/ui/Section';
 import { portfolioSections } from '@/data/portfolioSections';
 import { useTrackEvent } from '@/hooks/useTrackEvent';
-import { AboutSection } from '@/sections/portfolio/AboutSection';
-import { ContactSection } from '@/sections/portfolio/ContactSection';
-import { EducationSection } from '@/sections/portfolio/EducationSection';
-import { ExperienceSection } from '@/sections/portfolio/ExperienceSection';
-import { InterestsSection } from '@/sections/portfolio/InterestsSection';
-import { JourneySection } from '@/sections/portfolio/JourneySection';
+import { SECTION_CONTENT } from '@/sections/content';
 import { PortfolioFooter } from '@/sections/portfolio/PortfolioFooter';
 import { PortfolioHero } from '@/sections/portfolio/PortfolioHero';
-import { ProjectsSection } from '@/sections/portfolio/ProjectsSection';
 import { SectionNav } from '@/sections/portfolio/SectionNav';
-import { SkillsSection } from '@/sections/portfolio/SkillsSection';
-
-const SECTION_COMPONENTS = {
-  about: AboutSection,
-  experience: ExperienceSection,
-  skills: SkillsSection,
-  projects: ProjectsSection,
-  journey: JourneySection,
-  education: EducationSection,
-  interests: InterestsSection,
-  contact: ContactSection,
-};
 
 /** Traditional, non-3D portfolio: one fast, accessible page for recruiters and mobile. */
 export default function PortfolioPage() {
@@ -35,9 +18,13 @@ export default function PortfolioPage() {
       <Container className="lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-14">
         <SectionNav sections={portfolioSections} />
         <div>
-          {portfolioSections.map(({ id, code }) => {
-            const SectionComponent = SECTION_COMPONENTS[id];
-            return <SectionComponent key={id} id={id} code={code} />;
+          {portfolioSections.map(({ id, code, title, intro }) => {
+            const Content = SECTION_CONTENT[id];
+            return (
+              <Section key={id} id={id} code={code} title={title} intro={intro}>
+                <Content />
+              </Section>
+            );
           })}
         </div>
       </Container>

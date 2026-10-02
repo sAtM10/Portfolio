@@ -123,13 +123,13 @@ export function ContactForm() {
       aria-busy={isSubmitting}
       onSubmit={handleSubmit}
       onChange={handleChange}
-      className="relative grid gap-5"
+      className="@container relative grid gap-5"
     >
       <h3 id="contact-form-title" className="text-lg font-semibold tracking-tight">
         Send a message
       </h3>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-5 @sm:grid-cols-2">
         <TextField
           label="Name"
           name="name"
@@ -196,7 +196,7 @@ export function ContactForm() {
       )}
 
       <div>
-        <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto">
+        <Button type="submit" size="lg" disabled={isSubmitting} className="w-full @sm:w-auto">
           {isSubmitting ? (
             <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
           ) : (

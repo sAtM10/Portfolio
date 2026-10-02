@@ -2,15 +2,14 @@ import { useMemo } from 'react';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Panel } from '@/components/ui/Panel';
-import { Section } from '@/components/ui/Section';
 import { TagList } from '@/components/ui/TagList';
 import { useExperience } from '@/hooks/usePortfolioContent';
 import { formatDuration, formatMonthYear } from '@/utils/date';
 
 function ExperienceCard({ job }) {
   return (
-    <Panel as="article" className="p-6 sm:p-8">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <Panel as="article" className="p-6 @lg:p-8">
+      <header className="flex flex-col gap-3 @lg:flex-row @lg:items-start @lg:justify-between">
         <div>
           <h3 className="text-xl font-semibold tracking-tight">
             {job.role}
@@ -20,7 +19,7 @@ function ExperienceCard({ job }) {
             {job.company} · {job.location}
           </p>
         </div>
-        <p className="shrink-0 font-mono text-xs tracking-[0.14em] text-fg-subtle uppercase sm:text-right">
+        <p className="shrink-0 font-mono text-xs tracking-[0.14em] text-fg-subtle uppercase @lg:text-right">
           <time dateTime={job.startDate}>{formatMonthYear(job.startDate)}</time>
           {' – '}
           {job.endDate ? (
@@ -50,12 +49,13 @@ function ExperienceCard({ job }) {
   );
 }
 
-export function ExperienceSection({ id, code }) {
+/** Work history from the API (bundled copy until it responds). */
+export function ExperienceList() {
   const { data: experience, source } = useExperience();
   const jobs = useMemo(() => [...experience].sort((a, b) => a.order - b.order), [experience]);
 
   return (
-    <Section id={id} code={code} title="Experience" data-source={source}>
+    <div data-source={source}>
       {jobs.length === 0 ? (
         <EmptyState title="Experience details are being updated">
           The resume has the full work history in the meantime.
@@ -69,6 +69,6 @@ export function ExperienceSection({ id, code }) {
           ))}
         </ol>
       )}
-    </Section>
+    </div>
   );
 }

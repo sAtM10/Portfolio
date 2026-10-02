@@ -204,12 +204,13 @@ export function WorkspaceSchematic() {
         ))}
       </svg>
 
-      <nav aria-label="Workspace sections" className="mt-4 border-t border-line pt-4">
+      {/* Each item opens that object in the workspace (3D on desktop, 2D on small screens). */}
+      <nav aria-label="Workspace objects" className="mt-4 border-t border-line pt-4">
         <ol className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-          {workspaceObjects.map(({ id, code, object, title, section }) => (
+          {workspaceObjects.map(({ id, code, object, title }) => (
             <li key={id}>
               <Link
-                to={`/portfolio#${section}`}
+                to={`/workspace?object=${id}`}
                 onPointerEnter={() => setActiveId(id)}
                 onPointerLeave={() => setActiveId(null)}
                 onFocus={() => setActiveId(id)}

@@ -26,7 +26,8 @@ export function Section({ id, code, title, intro, className, children, ...props 
         </h2>
         {intro && <p className="mt-4 text-fg-muted">{intro}</p>}
       </header>
-      {children}
+      {/* Container-query root: content components size themselves to this width. */}
+      <div className="@container">{children}</div>
     </section>
   );
 }
