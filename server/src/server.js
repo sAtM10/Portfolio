@@ -1,5 +1,14 @@
 import { createApp } from './app.js';
+import { connectDatabase, disconnectDatabase } from './config/db.js';
 import { env } from './config/env.js';
+
+// Connect before accepting traffic so the API never serves requests without a database.
+try {
+  await connectDatabase(env.mongodbUri);
+} catch (error) {
+  console.error(`[db] ${error.message}`);
+  process.exit(1);
+}
 
 const app = createApp();
 
@@ -14,7 +23,10 @@ const server = app.listen(env.port, (error) => {
 
 function shutdown(signal) {
   console.log(`${signal} received, closing server...`);
-  server.close(() => process.exit(0));
+  server.close(async () => {
+    await disconnectDatabase();
+    process.exit(0);
+  });
 }
 
 process.on('SIGINT', shutdown);

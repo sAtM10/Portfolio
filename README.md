@@ -4,17 +4,17 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 3 of 10 complete — plain portfolio with full content. See [Roadmap](#roadmap).
+> **Status:** Phase 4 of 10 complete — Express API + MongoDB Atlas. See [Roadmap](#roadmap).
 
 ## Tech stack
 
-| Layer    | Tools                                                                     |
-| -------- | ------------------------------------------------------------------------- |
-| Frontend | React 19, Vite 8, React Router 8, Tailwind CSS 4, Motion (Framer Motion)  |
+| Layer    | Tools                                                                      |
+| -------- | -------------------------------------------------------------------------- |
+| Frontend | React 19, Vite 8, React Router 8, Tailwind CSS 4, Motion (Framer Motion)   |
 | 3D       | Three.js, React Three Fiber, @react-three/drei (lazy-loaded, desktop only) |
-| Backend  | Node.js 24, Express 5, Mongoose 9, Zod, Helmet, CORS, express-rate-limit  |
-| Database | MongoDB Atlas                                                             |
-| Tooling  | ESLint 10 (flat config), Prettier 3                                       |
+| Backend  | Node.js 24, Express 5, Mongoose 9, Zod, Helmet, CORS, express-rate-limit   |
+| Database | MongoDB Atlas                                                              |
+| Tooling  | ESLint 10 (flat config), Prettier 3                                        |
 
 The backend uses Node's built-in `--env-file-if-exists` and `--watch` flags, so it needs no
 `dotenv` or `nodemon`.
@@ -38,15 +38,17 @@ portfolio/
 │       └── styles/         Global CSS and Tailwind theme
 ├── server/                 Express API (runs independently)
 │   └── src/
-│       ├── config/         Environment + database config
-│       ├── controllers/    Request/response handling
+│       ├── config/         Environment, database connection, shared constants
+│       ├── controllers/    Request/response handling (thin)
 │       ├── models/         Mongoose schemas
 │       ├── routes/         Route definitions
-│       ├── services/       Business/data logic
-│       ├── middleware/     Error handling, validation, rate limiting
-│       ├── utils/          Shared helpers
+│       ├── services/       Data access / business logic
+│       ├── validators/     Zod request schemas
+│       ├── middleware/     Validation, rate limiting, DB guard, 404, errors
+│       ├── utils/          HttpError, serializer
 │       ├── app.js          Express app factory
-│       └── server.js       Entry point
+│       └── server.js       Entry point (connects to MongoDB, then listens)
+│   └── scripts/seed.js     Idempotent seed from client/src/data
 ├── .editorconfig  .gitattributes  .gitignore  .nvmrc  .prettierrc.json
 └── package.json            Convenience scripts only (no dependencies)
 ```
@@ -79,21 +81,40 @@ On Windows PowerShell use `Copy-Item client/.env.example client/.env` (and the s
 
 **`server/.env`**
 
-| Variable      | Example                 | Purpose                                         |
-| ------------- | ----------------------- | ----------------------------------------------- |
-| `NODE_ENV`    | `development`           | `production` disables dev logging/error details |
-| `PORT`        | `5000`                  | API port                                        |
-| `CLIENT_URL`  | `http://localhost:5173` | Allowed CORS origin(s), comma-separated         |
-| `MONGODB_URI` | `mongodb+srv://…`       | Atlas connection string (Phase 4)               |
+| Variable      | Example                       | Purpose                                                 |
+| ------------- | ----------------------------- | ------------------------------------------------------- |
+| `NODE_ENV`    | `development`                 | `production` disables dev logging/error details         |
+| `PORT`        | `5000`                        | API port                                                |
+| `CLIENT_URL`  | `http://localhost:5173`       | Allowed CORS origin(s), comma-separated                 |
+| `MONGODB_URI` | `mongodb+srv://…/portfolio?…` | Atlas connection string (database `portfolio`)          |
+| `TRUST_PROXY` | _(empty)_                     | Proxy hops for real client IPs; default 1 in production |
 
 **`client/.env`**
 
-| Variable       | Example                 | Purpose                                         |
-| -------------- | ----------------------- | ----------------------------------------------- |
+| Variable       | Example                 | Purpose                                              |
+| -------------- | ----------------------- | ---------------------------------------------------- |
 | `VITE_API_URL` | `http://localhost:5000` | API base URL, no trailing slash. Empty = same origin |
 
 `VITE_*` values are embedded in the browser bundle — never put secrets there. `.env` files are
 git-ignored; only `.env.example` is committed.
+
+## MongoDB Atlas setup
+
+1. Create a free cluster at [cloud.mongodb.com](https://cloud.mongodb.com).
+2. **Database Access** → add a user with _Read and write to any database_.
+3. **Network Access** → add your current IP (and later your host's outbound IPs).
+4. **Connect → Drivers** → copy the `mongodb+srv://` string into `server/.env` as
+   `MONGODB_URI`, insert `/portfolio` before the `?`, and replace `<db_password>`
+   (URL-encode `@ : / ? # %` if present). Never paste the password anywhere else.
+5. Load the content: `cd server && npm run seed`.
+
+**Collections:** `projects`, `experiences` (seeded from `client/src/data`),
+`contactmessages` (form submissions — name, email, subject, message, status; no IP or
+browser data), `siteevents` (anonymous analytics; a TTL index deletes them after 365 days).
+
+**Seeding:** `npm run seed` is idempotent — it inserts new entries, updates changed ones,
+leaves identical ones alone, reports database-only entries without deleting them, and never
+touches contact messages or events. Edit content in `client/src/data/`, then re-run it.
 
 ## Running locally
 
@@ -108,23 +129,23 @@ Or run inside each folder: `cd server && npm run dev`, `cd client && npm run dev
 
 ## Scripts (from the repo root)
 
-| Script                 | What it does                                  |
-| ---------------------- | --------------------------------------------- |
-| `npm run install:all`  | Install client and server dependencies        |
-| `npm run dev:client`   | Vite dev server with HMR                      |
-| `npm run dev:server`   | Express with auto-restart on file changes     |
-| `npm run build`        | Production build of the client → `client/dist` |
-| `npm run lint`         | ESLint on both apps                           |
-| `npm run format`       | Prettier on both apps (`format:check` in CI)  |
+| Script                | What it does                                   |
+| --------------------- | ---------------------------------------------- |
+| `npm run install:all` | Install client and server dependencies         |
+| `npm run dev:client`  | Vite dev server with HMR                       |
+| `npm run dev:server`  | Express with auto-restart on file changes      |
+| `npm run build`       | Production build of the client → `client/dist` |
+| `npm run lint`        | ESLint on both apps                            |
+| `npm run format`      | Prettier on both apps (`format:check` in CI)   |
 
 ## Routes (client)
 
-| Path         | Page                                                     | Loading       |
-| ------------ | -------------------------------------------------------- | ------------- |
-| `/`          | Landing — hero, workspace schematic, HUD footer           | main bundle   |
-| `/portfolio` | Plain portfolio — 8 sections, scroll-spy nav, contact form | lazy chunk    |
-| `/workspace` | Interactive 3D workspace (placeholder until Phase 6)     | lazy chunk    |
-| `*`          | 404                                                      | lazy chunk    |
+| Path         | Page                                                       | Loading     |
+| ------------ | ---------------------------------------------------------- | ----------- |
+| `/`          | Landing — hero, workspace schematic, HUD footer            | main bundle |
+| `/portfolio` | Plain portfolio — 8 sections, scroll-spy nav, contact form | lazy chunk  |
+| `/workspace` | Interactive 3D workspace (placeholder until Phase 6)       | lazy chunk  |
+| `*`          | 404                                                        | lazy chunk  |
 
 ## Editing content
 
@@ -167,22 +188,32 @@ reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, 
 
 ## API endpoints
 
-| Method | Path          | Status      | Description         |
-| ------ | ------------- | ----------- | ------------------- |
-| GET    | `/api/health` | ✅ live     | Liveness check      |
-| GET    | `/api/projects`, `/api/projects/:id`     | Phase 4 | Projects    |
-| GET    | `/api/experience`, `/api/experience/:id` | Phase 4 | Experience  |
-| POST   | `/api/contact` | Phase 4    | Contact form        |
-| POST   | `/api/events`  | Phase 4    | Lightweight analytics |
+| Method | Path                                                                                           | Success                                 | Errors                     | Rate limit   |
+| ------ | ---------------------------------------------------------------------------------------------- | --------------------------------------- | -------------------------- | ------------ |
+| GET    | `/api/health`                                                                                  | 200 `{ data: { status, database, … } }` | —                          | —            |
+| GET    | `/api/projects` — optional `?category=professional` or `personal`, `?featured=true` or `false` | 200 `{ data: [...] }` sorted by `order` | 400 bad filter             | 300 / 15 min |
+| GET    | `/api/projects/:id` — slug (preferred) or ObjectId                                             | 200 `{ data }`                          | 400, 404                   | 300 / 15 min |
+| GET    | `/api/experience`                                                                              | 200 `{ data: [...] }`                   | —                          | 300 / 15 min |
+| GET    | `/api/experience/:id` — slug or ObjectId                                                       | 200 `{ data }`                          | 400, 404                   | 300 / 15 min |
+| POST   | `/api/contact` `{ name, email, subject?, message }`                                            | 201 `{ data: { received: true } }`      | 400 (field `details`), 429 | 5 / 15 min   |
+| POST   | `/api/events` `{ eventType, metadata?, path? }`                                                | 204                                     | 400, 429                   | 60 / min     |
 
-Errors always use the shape `{ "error": { "message": "…" } }`.
+- Responses are always `{ "data": … }` or `{ "error": { "message", "details"? } }`;
+  `_id`, `__v`, `published` and timestamps are never exposed (`id` is returned instead).
+- `eventType`: `portfolio_visit`, `workspace_enter`, `project_open`, `resume_open`,
+  `contact_submit`, `plain_mode_open`. `metadata`: ≤ 5 simple keys with short primitive values.
+- Security: Helmet headers, CORS allow-list (`CLIENT_URL`), 20 KB body limit, Zod validation,
+  Mongoose `sanitizeFilter` + `strictQuery`, in-memory rate limits (IPs never stored),
+  contact-form honeypot, 503 while the database is unreachable.
+- No admin endpoints yet; `published` (projects/experience) and contact `status` are ready for
+  a future authenticated admin panel.
 
 ## Roadmap
 
 1. ✅ Project setup
 2. ✅ Base visual design (tokens, typography, landing page)
 3. ✅ Plain portfolio (Hero, About, Experience, Skills, Projects, Education, Contact)
-4. Express API + MongoDB models, validation, error handling
+4. ✅ Express API + MongoDB models, validation, error handling
 5. Frontend ↔ API integration
 6. Interactive 3D workspace
 7. Animations and transitions
@@ -192,11 +223,20 @@ Errors always use the shape `{ "error": { "message": "…" } }`.
 
 ## Troubleshooting
 
+- **`[db] MONGODB_URI still contains the <db_password> placeholder`** — put the real password in
+  `server/.env`.
+- **`[db] Authentication failed`** — wrong username/password, or special characters not
+  URL-encoded.
+- **`[db] Could not reach the cluster`** — add your current IP in Atlas → Network Access.
+- **`GET /api/projects` returns `{ "data": [] }`** — run `npm run seed` in `server/`.
+- **`429 Too many …`** — rate limit hit; limits reset after the window (or on server restart in
+  development).
+
 - **`SyntaxError` / "Unsupported engine" on install or `vite` crashes** — check `node -v`; you
   need ≥ 22.12.
 - **`Port 5173 is already in use`** — the client uses `strictPort`; stop the other process or
   change `server.port` in `client/vite.config.js`.
-- **`EADDRINUSE` on 5000** — change `PORT` in `server/.env` *and* `VITE_API_URL` in
+- **`EADDRINUSE` on 5000** — change `PORT` in `server/.env` _and_ `VITE_API_URL` in
   `client/.env`.
 - **Placeholder shows "API unreachable"** — start the server, then confirm `VITE_API_URL` matches
   its port and `CLIENT_URL` matches the client's origin (CORS). Restart Vite after editing
