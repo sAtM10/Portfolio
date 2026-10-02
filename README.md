@@ -4,7 +4,7 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 1 of 10 complete — project setup. See [Roadmap](#roadmap).
+> **Status:** Phase 2 of 10 complete — base visual design and landing page. See [Roadmap](#roadmap).
 
 ## Tech stack
 
@@ -71,6 +71,10 @@ cp server/.env.example server/.env
 
 On Windows PowerShell use `Copy-Item client/.env.example client/.env` (and the same for server).
 
+3. Put the resume PDF at `client/public/resume.pdf` (served at `/resume.pdf`). It is
+   currently git-ignored because it contains a phone number — remove that `.gitignore` entry once
+   a publishable version is in place.
+
 ## Environment variables
 
 **`server/.env`**
@@ -113,6 +117,31 @@ Or run inside each folder: `cd server && npm run dev`, `cd client && npm run dev
 | `npm run lint`         | ESLint on both apps                           |
 | `npm run format`       | Prettier on both apps (`format:check` in CI)  |
 
+## Routes (client)
+
+| Path         | Page                                                     | Loading       |
+| ------------ | -------------------------------------------------------- | ------------- |
+| `/`          | Landing — hero, workspace schematic, HUD footer           | main bundle   |
+| `/portfolio` | Plain portfolio (placeholder until Phase 3)              | lazy chunk    |
+| `/workspace` | Interactive 3D workspace (placeholder until Phase 6)     | lazy chunk    |
+| `*`          | 404                                                      | lazy chunk    |
+
+## Design system
+
+All tokens live in `client/src/styles/index.css` (`@theme`). Tailwind's default palette is
+reset, so only semantic colors exist — `canvas`, `surface`, `raised`, `line`, `fg`,
+`fg-muted`, `fg-subtle`, `accent` (warm amber "desk lamp"), `ambient` (cool "monitor glow"),
+`success`, `danger`. Every text color passes WCAG AA (≥ 4.5:1) on every surface.
+
+- **Type:** Instrument Sans (UI/headings) + JetBrains Mono (labels, buttons, HUD), self-hosted
+  via Fontsource — no third-party font requests.
+- **Primitives:** `Button` (primary / secondary / ghost; renders Link, a or button),
+  `Panel` (glass surface), `Container`, `Eyebrow`.
+- **Motion:** CSS-only entrance (`animate-rise`) for now; everything is disabled under
+  `prefers-reduced-motion: reduce`.
+- **Content:** profile text, nav and the workspace-object map live in `client/src/data/`, so
+  the landing schematic, the 3D scene and the plain portfolio share one source.
+
 ## API endpoints
 
 | Method | Path          | Status      | Description         |
@@ -128,7 +157,7 @@ Errors always use the shape `{ "error": { "message": "…" } }`.
 ## Roadmap
 
 1. ✅ Project setup
-2. Base visual design (tokens, typography, landing page)
+2. ✅ Base visual design (tokens, typography, landing page)
 3. Plain portfolio (Hero, About, Experience, Skills, Projects, Education, Contact)
 4. Express API + MongoDB models, validation, error handling
 5. Frontend ↔ API integration

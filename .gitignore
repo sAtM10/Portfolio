@@ -24,3 +24,6 @@ npm-debug.log*
 *.swp
 .DS_Store
 Thumbs.db
+
+# Resume PDF contains a phone number — kept out of git until approved for publishing
+client/public/resume.pdf
