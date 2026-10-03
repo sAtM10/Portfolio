@@ -4,8 +4,11 @@ An immersive portfolio where visitors explore a developer's digital workspace (l
 server rack, file cabinet, terminal, phone) instead of scrolling a conventional resume — with a
 fast, accessible **plain portfolio mode** for recruiters and mobile users.
 
-> **Status:** Phase 10 — the API is live on Render; the frontend deploy to Vercel is next (see
-> [Deployment](#deployment)). Phases 8 and 9 are deferred. See [Roadmap](#roadmap).
+> **Status:** Live at <https://satwik-mukherjee.vercel.app> (API on Render, data on MongoDB
+> Atlas). Phases 8 and 9 are deferred — see [Roadmap](#roadmap).
+>
+> **Full guide:** [docs/PROJECT_HANDBOOK.md](docs/PROJECT_HANDBOOK.md) — what was built and why,
+> how to run it, how to make changes, and how production is operated.
 
 ## Tech stack
 
@@ -345,7 +348,8 @@ deployed from a local machine. Both free tiers are enough for this site.
 3. Enter the two secret values when prompted:
    - `MONGODB_URI` — the Atlas connection string with the rotated password.
    - `CLIENT_URL` — the Vercel URL you will use, e.g. `https://satwik-mukherjee.vercel.app`
-     (comma-separate several; no trailing slash).
+     (comma-separate several; no trailing slash). Afterwards, check that it really exists under
+     Environment — without it the API only accepts localhost.
 4. After the deploy, open [`https://satwik-portfolio-api.onrender.com/api/health`](https://satwik-portfolio-api.onrender.com/api/health) — expect
    `"environment": "production"` and `"database": "connected"`.
 
@@ -363,7 +367,8 @@ deployed from a local machine. Both free tiers are enough for this site.
    | `VITE_RESUME_URL` | `/resume.pdf`                                            |
 
    Enter these exact values — don't paste `client/.env.example`, whose values are for local
-   development. Builds on Vercel fail if either URL points to localhost.
+   development. Builds on Vercel fail if either URL points to localhost. Create them as type
+   **Config**: Vercel won't let you edit a `VITE_*` variable saved as Secret.
 
 4. **Domain (optional):** Settings → Domains → **Add Domain** → any free `*.vercel.app` name
    (e.g. `satwik-mukherjee.vercel.app`) connected to **Production**. Optionally edit the
